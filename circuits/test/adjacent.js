@@ -1,20 +1,24 @@
 import { assert } from 'chai'
 import { wasm } from 'circom_tester'
 
+import { F1Field } from 'ffjavascript'
+import { Scalar } from 'ffjavascript'
+const p = Scalar.fromString('21888242871839275222246405745257275088548364400416034343698204186575808495617')
+const Fr = new F1Field(p)
+
 describe('adjacent', function () {
 	let circuit
 
 	before(async function () {
-		circuit = await wasm('circom/adjacent.circom')
+		circuit = await wasm('test/adjacent.t.circom')
 	})
 
 	it('Should generate the witness successfully', async function () {
 		let input = {
-			x1: 1,
-			y1: 1,
-			x2: 2,
-			y2: 1,
-			out: 1,
+			x: 1,
+			y: 1,
+			ambush_x: 2,
+			ambush_y: 1,
 		}
 		const witness = await circuit.calculateWitness(input)
 		await circuit.assertOut(witness, {})
@@ -22,15 +26,17 @@ describe('adjacent', function () {
 
 	it('Should be adjacent', async function () {
 		let input = {
-			x1: 1,
-			y1: 1,
-			x2: 2,
-			y2: 1,
-			out: 1,
+			x: 1,
+			y: 1,
+			ambush_x: 2,
+			ambush_y: 1,
 		}
+		const expectedOutput = 1
 
 		try {
-			await circuit.calculateWitness(input)
+			const witness = await circuit.calculateWitness(input)
+			assert(Fr.eq(Fr.e(witness[0]), Fr.e(1)))
+			assert(Fr.eq(Fr.e(witness[1]), Fr.e(expectedOutput)))
 		} catch (err) {
 			assert(false, err.message)
 		}
@@ -38,15 +44,17 @@ describe('adjacent', function () {
 
 	it('Should not be adjacent', async function () {
 		let input = {
-			x1: 1,
-			y1: 1,
-			x2: 2,
-			y2: 2,
-			out: 0,
+			x: 1,
+			y: 1,
+			ambush_x: 2,
+			ambush_y: 2,
 		}
+		const expectedOutput = 0
 
 		try {
-			await circuit.calculateWitness(input)
+			const witness = await circuit.calculateWitness(input)
+			assert(Fr.eq(Fr.e(witness[0]), Fr.e(1)))
+			assert(Fr.eq(Fr.e(witness[1]), Fr.e(expectedOutput)))
 		} catch (err) {
 			assert(false, err.message)
 		}

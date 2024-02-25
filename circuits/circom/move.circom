@@ -31,6 +31,7 @@ template Move() {
 	signal move_x[5];
 	signal move_y[5];
 	signal move[5];
+	
 	for (var i = 0; i < 5; i++) {
 		move_x[i] <== IsEqual()([x2, x1 + moves[i][0]]);
 		move_y[i] <== IsEqual()([y2, y1 + moves[i][1]]);
@@ -41,5 +42,3 @@ template Move() {
 	signal valid_move <== IsEqual()([total, 1]);
 	valid_move === 1;
 }
-
-component main = Move();

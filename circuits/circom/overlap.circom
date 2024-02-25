@@ -8,7 +8,7 @@ template Overlap() {
 	signal input x;
 	signal input y;
 
-	signal input ambush_locations[5][2];
+	signal input ambushes[5][2];
 
 	signal eq_x[5];
 	signal eq_y[5];
@@ -16,8 +16,8 @@ template Overlap() {
 
 	var total = 0;
 	for (var i = 0; i < 5; i++) {
-		eq_x[i] <== IsEqual()([x, ambush_locations[i][0]]);
-		eq_y[i] <== IsEqual()([y, ambush_locations[i][1]]);
+		eq_x[i] <== IsEqual()([x, ambushes[i][0]]);
+		eq_y[i] <== IsEqual()([y, ambushes[i][1]]);
 
 		is_equal[i] <== eq_x[i] * eq_y[i];
 		total += is_equal[i];
@@ -25,7 +25,4 @@ template Overlap() {
 
 	signal is_zero <== IsZero()(total);
 	is_zero === 1;
-
 }
-
-component main {public [ambush_locations]} = Overlap();

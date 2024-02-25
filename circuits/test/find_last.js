@@ -1,24 +1,23 @@
 import { assert } from 'chai'
 import { wasm } from 'circom_tester'
 
-describe('overlap', function () {
+describe('find_last', function () {
 	let circuit
 
 	before(async function () {
-		circuit = await wasm('test/overlap.t.circom')
+		circuit = await wasm('circom/find_last.circom')
 	})
 
 	it('Should generate the witness successfully', async function () {
 		let input = {
-			x: 1,
-			y: 1,
 			ambushes: [
 				[0, 0],
 				[2, 2],
 				[3, 3],
-				[4, 4],
-				[5, 5],
+				[-1, -1],
+				[-1, -1],
 			],
+			last_ambush: [3, 3],
 		}
 		const witness = await circuit.calculateWitness(input)
 		await circuit.assertOut(witness, {})
@@ -26,15 +25,48 @@ describe('overlap', function () {
 
 	it('Should succeed', async function () {
 		let input = {
-			x: 2,
-			y: 3,
 			ambushes: [
 				[0, 0],
 				[2, 2],
-				[1, 2],
-				[2, 1],
-				[5, 5],
+				[3, 3],
+				[-1, -1],
+				[-1, -1],
 			],
+			last_ambush: [3, 3],
+		}
+
+		try {
+			await circuit.calculateWitness(input)
+		} catch (err) {
+			assert(false, err.message)
+		}
+
+		input = {
+			ambushes: [
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+			last_ambush: [-1, -1],
+		}
+
+		try {
+			await circuit.calculateWitness(input)
+		} catch (err) {
+			assert(false, err.message)
+		}
+
+		input = {
+			ambushes: [
+				[2, 3],
+				[2, 3],
+				[2, 3],
+				[2, 3],
+				[3, 5],
+			],
+			last_ambush: [3, 5],
 		}
 
 		try {
@@ -44,17 +76,16 @@ describe('overlap', function () {
 		}
 	})
 
-	it('Should fail because it overlaps', async function () {
+	it('Should fail', async function () {
 		let input = {
-			x: 2,
-			y: 1,
 			ambushes: [
 				[0, 0],
 				[2, 2],
-				[1, 1],
-				[2, 1],
-				[5, 5],
+				[3, 3],
+				[-1, -1],
+				[-1, -1],
 			],
+			last_ambush: [2, 2],
 		}
 		try {
 			await circuit.calculateWitness(input)
