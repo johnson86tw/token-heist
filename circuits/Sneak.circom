@@ -14,6 +14,8 @@ function find_last_ambush(ambushes, pos) {
 	return -1;
 }
 
+// TODO: should design seank_paths for robbing treasure rather than last_move and move
+
 template Sneak() {
 	// secret
 	signal input last_move[2];
@@ -26,9 +28,6 @@ template Sneak() {
 	signal input ambushes[5][2];
 
 	signal output out;
-
-	signal last_ambush_x <-- find_last_ambush(ambushes, 0);
-	signal last_ambush_y <-- find_last_ambush(ambushes, 1);
 
 	// check if the last commitment and the commitment are valid
 	signal last_move_hash <== Poseidon(3)([last_move[0], last_move[1], salt]);
@@ -49,8 +48,11 @@ template Sneak() {
 	no_overlap.x <== move[0];
 	no_overlap.y <== move[1];
 	no_overlap.ambushes <== ambushes;
-	
+
 	// check if the move is adjacent to the last ambush
+	signal last_ambush_x <-- find_last_ambush(ambushes, 0);
+	signal last_ambush_y <-- find_last_ambush(ambushes, 1);
+	
 	component is_adjacent = Adjacent();
 	is_adjacent.x <== move[0];
 	is_adjacent.y <== move[1];
