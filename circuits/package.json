@@ -5,11 +5,13 @@
 	"license": "MIT",
 	"type": "module",
 	"scripts": {
+		"compile": "circom Sneak.circom --r1cs --wasm --sym --c",
 		"test": "mocha"
 	},
 	"dependencies": {
 		"circom_tester": "^0.0.20",
-		"circomlib": "^2.0.5"
+		"circomlib": "^2.0.5",
+		"circomlibjs": "^0.1.7"
 	},
 	"devDependencies": {
 		"chai": "^5.1.0",
