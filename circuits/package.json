@@ -6,7 +6,8 @@
 	"type": "module",
 	"scripts": {
 		"compile": "circom Sneak.circom --r1cs --wasm --sym --c",
-		"test": "mocha"
+		"test": "mocha",
+		"test:sneak": "mocha test/sneak.js"
 	},
 	"dependencies": {
 		"circom_tester": "^0.0.20",

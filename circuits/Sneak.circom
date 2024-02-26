@@ -6,19 +6,19 @@ include "./circom/move.circom";
 include "./circom/overlap.circom";
 include "./circom/adjacent.circom";
 
-// 如果是第一步，返回 [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]]
+// if there's only one step, return [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]]
 function get_last_paths(paths) {
 	var last_paths[5][2] = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]];
 	for (var i = 4; i > 0; i--) {
-		if (paths[i][0] != -1) {
-			last_paths[i-1][0] = paths[i][0];
-			last_paths[i-1][1] = paths[i][1];
+		if (paths[i][0] != -1 && paths[i][1] != -1) {
+			last_paths[i-1][0] = paths[i-1][0];
+			last_paths[i-1][1] = paths[i-1][1];
 		}
 	}
 	return last_paths;
 }
 
-// 如果是第一步，返回 [-1, -1]
+// if there's only one step, return [-1, -1]
 function get_last_move(paths) {
 	var last_move[2] = [-1, -1];
 	for (var i = 4; i > 0; i--) {
