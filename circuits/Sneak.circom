@@ -45,8 +45,14 @@ template Sneak() {
 
 	// ------------------------------------------------------------
 
-	signal last_move[2] <-- get_last_move(paths);
-	signal move[2] <-- get_move(paths);
+	signal last_move[2];
+	last_move[0] <-- get_last_move(paths, 0);
+	last_move[1] <-- get_last_move(paths, 1);
+
+	signal move[2];
+	move[0] <-- get_move(paths, 0);
+	move[1] <-- get_move(paths, 1);
+
 
 	/* Check if the move is valid */
 	/* Check the move is within the range of -1 to 8 */
@@ -64,7 +70,9 @@ template Sneak() {
 	no_overlap.ambushes <== ambushes;
 
 	/* Check if the last move is adjacent to the latest ambush */
-	signal ambush[2] <-- get_ambush(ambushes);
+	signal ambush[2];
+	ambush[0] <-- get_move(ambushes, 0);
+	ambush[1] <-- get_move(ambushes, 1);
 	
 	component is_adjacent = Adjacent();
 	is_adjacent.x <== last_move[0];

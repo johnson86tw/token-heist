@@ -8,7 +8,6 @@
 		"compile": "./scripts/compile.sh",
 		"witness": "./scripts/generateWitness.sh",
 		"test": "mocha",
-		"test:all": "mocha ./test/**/*.mjs",
 		"test:sneak": "mocha test/sneak.mjs"
 	},
 	"dependencies": {

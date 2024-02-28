@@ -4,8 +4,8 @@
 ```
 cd circuits
 
+pnpm test
 pnpm build
-pnpm test:all
 ```
 
 ## Reference

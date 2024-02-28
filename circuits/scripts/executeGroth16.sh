@@ -57,12 +57,14 @@ echo "----- Verify the proof -----"
 snarkjs groth16 verify build/verification_key.json build/public.json build/proof.json
 
 echo "----- Generate Solidity verifier -----"
+
+CIRCUIT_CAP=$(echo ${CIRCUIT:0:1} | tr '[a-z]' '[A-Z]')${CIRCUIT:1}
+
 # Generate a Solidity verifier that allows verifying proofs on Ethereum blockchain
-snarkjs zkey export solidityverifier build/${CIRCUIT}_final.zkey build/${CIRCUIT}Verifier.sol
+snarkjs zkey export solidityverifier build/${CIRCUIT}_final.zkey build/${CIRCUIT_CAP}Verifier.sol
 
 # Update the contract name in the Solidity verifier
-CIRCUIT_CAP=$(echo ${CIRCUIT:0:1} | tr '[a-z]' '[A-Z]')${CIRCUIT:1}
-sed -i "" "s/contract Groth16Verifier/contract ${CIRCUIT_CAP}Verifier/g" build/${CIRCUIT}Verifier.sol
+sed -i "" "s/contract Groth16Verifier/contract ${CIRCUIT_CAP}Verifier/g" build/${CIRCUIT_CAP}Verifier.sol
 
 echo "----- Generate and print parameters of call -----"
 # Generate and print parameters of call
