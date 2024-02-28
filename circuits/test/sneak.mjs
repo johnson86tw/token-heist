@@ -41,20 +41,20 @@ describe('Sneak', function () {
 			paths: [
 				[1, 1],
 				[2, 1],
-				[2, 1],
+				[2, 0],
 				[-1, -1],
 				[-1, -1],
 			],
 			ambushes: [
 				[0, 1],
-				[1, 2],
-				[2, 0],
+				[2, 2],
+				[-1, -1],
 				[-1, -1],
 				[-1, -1],
 			],
 		}
 		const flattened = flatten(input.paths)
-		expect(flattened).to.deep.equal([4, 5, 5, -1, -1])
+		expect(flattened).to.deep.equal([4, 5, 2, -1, -1])
 
 		let last_paths = get_last_paths(input.paths)
 		const flattened_last_paths = flatten(last_paths)

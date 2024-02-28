@@ -6,6 +6,21 @@ include "./circom/move.circom";
 include "./circom/overlap.circom";
 include "./circom/adjacent.circom";
 
+/* 
+	3x3 Board
+
+	// 2D array
+ 	[[0, 0], [1, 0], [2, 0]
+	 [0, 1], [1, 1], [2, 1]
+	 [0, 2], [1, 2], [2, 2]]
+
+	// 1D array only for hashing
+	[0, 1, 2
+	 3, 4, 5
+	 6, 7, 8]
+*/
+
+
 // if there's only one step, return [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]]
 function get_last_paths(paths) {
 	var last_paths[5][2] = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]];
@@ -41,13 +56,15 @@ function get_current_move(paths) {
 	return move;
 }
 
-function find_last_ambush(ambushes, pos) {
-    for (var i = 4; i >= 0; i--) {
-		if (ambushes[i][pos] != -1) {
-			return ambushes[i][pos];
+function get_last_ambush(ambushes) {
+	var last_ambush[2] = [-1, -1];
+	for (var i = 4; i > 0; i--) {
+		if (ambushes[i][0] != -1) {
+			last_ambush[0] = ambushes[i][0];
+			last_ambush[1] = ambushes[i][1];
 		}
 	}
-	return -1;
+	return last_ambush;
 }
 
 template Sneak() {
@@ -61,9 +78,11 @@ template Sneak() {
 	signal output commitment;
 	signal output noticed;
 
-	// check commitments, should salt be added?
+	// calculate commitments
+	
 	signal last_paths[5][2] <-- get_last_paths(paths);
 
+	// should salt be added?
 	signal last_paths_hash <== PathHasher()(last_paths);
 	last_commitment <== last_paths_hash;
 
@@ -75,30 +94,32 @@ template Sneak() {
 	signal last_move[2] <-- get_last_move(paths);
 	signal move[2] <-- get_current_move(paths);
 
-	// check if the move is valid
+	/* Check if the move is valid */
+	/* Check the move is within the range of -1 to 8 */
+	/* Check the move is either to an adjacent cell or staying in place */
 	component valid_move = Move();
 	valid_move.x1 <== last_move[0];
 	valid_move.y1 <== last_move[1];
 	valid_move.x2 <== move[0];
 	valid_move.y2 <== move[1];
 	
-	// check if the move overlaps with any ambush
+	/* Check if the move overlaps with any ambush */
 	component no_overlap = Overlap();
 	no_overlap.x <== move[0];
 	no_overlap.y <== move[1];
 	no_overlap.ambushes <== ambushes;
 
-	// check if the move is adjacent to the last ambush
-	signal last_ambush_x <-- find_last_ambush(ambushes, 0);
-	signal last_ambush_y <-- find_last_ambush(ambushes, 1);
+	/* Check if the last move is adjacent to the last ambush */
+	signal last_ambush[2] <-- get_last_ambush(ambushes);
 	
 	component is_adjacent = Adjacent();
-	is_adjacent.x <== move[0];
-	is_adjacent.y <== move[1];
-	is_adjacent.ambush_x <== last_ambush_x;
-	is_adjacent.ambush_y <== last_ambush_y;
+	is_adjacent.x <== last_move[0];
+	is_adjacent.y <== last_move[1];
+	is_adjacent.ambush_x <== last_ambush[0];
+	is_adjacent.ambush_y <== last_ambush[1];
 
 	noticed <== is_adjacent.out;
 }
 
 component main {public [ambushes]} = Sneak();
+
