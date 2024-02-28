@@ -3,11 +3,13 @@
 	"version": "0.0.0",
 	"main": "index.js",
 	"license": "MIT",
-	"type": "module",
 	"scripts": {
-		"compile": "circom Sneak.circom --r1cs --wasm --sym --c",
+		"build": "./scripts/executeGroth16.sh",
+		"compile": "./scripts/compile.sh",
+		"witness": "./scripts/generateWitness.sh",
 		"test": "mocha",
-		"test:sneak": "mocha test/sneak.js"
+		"test:all": "mocha ./test/**/*.mjs",
+		"test:sneak": "mocha test/sneak.mjs"
 	},
 	"dependencies": {
 		"circom_tester": "^0.0.20",
@@ -16,6 +18,7 @@
 	},
 	"devDependencies": {
 		"chai": "^5.1.0",
+		"ffjavascript": "^0.2.63",
 		"mocha": "^10.3.0"
 	}
 }
