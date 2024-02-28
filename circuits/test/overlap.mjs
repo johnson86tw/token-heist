@@ -5,7 +5,7 @@ describe('overlap', function () {
 	let circuit
 
 	before(async function () {
-		circuit = await wasm('test/overlap.t.circom')
+		circuit = await wasm('test/circom/overlap.t.circom')
 	})
 
 	it('Should generate the witness successfully', async function () {

@@ -5,7 +5,7 @@ describe('move', function () {
 	let circuit
 
 	before(async function () {
-		circuit = await wasm('test/move.t.circom')
+		circuit = await wasm('test/circom/move.t.circom')
 	})
 
 	it('Should generate the witness successfully', async function () {

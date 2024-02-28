@@ -12,7 +12,7 @@ describe('hasher', function () {
 	let poseidon
 
 	before(async function () {
-		circuit = await wasm('test/hasher.t.circom')
+		circuit = await wasm('test/circom/hasher.t.circom')
 		poseidon = await buildPoseidon()
 	})
 

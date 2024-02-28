@@ -12,7 +12,7 @@ describe('Sneak', function () {
 	let poseidon
 
 	before(async function () {
-		circuit = await wasm('Sneak.circom')
+		circuit = await wasm('sneak.circom')
 		poseidon = await buildPoseidon()
 	})
 

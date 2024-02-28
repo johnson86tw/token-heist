@@ -10,7 +10,7 @@ describe('adjacent', function () {
 	let circuit
 
 	before(async function () {
-		circuit = await wasm('test/adjacent.t.circom')
+		circuit = await wasm('test/circom/adjacent.t.circom')
 	})
 
 	it('Should generate the witness successfully', async function () {
