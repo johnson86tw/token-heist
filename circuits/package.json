@@ -1,5 +1,5 @@
 {
-	"name": "circuits",
+	"name": "@token-heist/circuits",
 	"version": "0.0.0",
 	"main": "index.js",
 	"license": "MIT",

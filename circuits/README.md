@@ -1,4 +1,4 @@
-# circuits
+# @token-heist/circuits
 
 ```
 yarn compile

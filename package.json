@@ -1,0 +1,27 @@
+{
+	"name": "token-heist",
+	"description": "",
+	"repository": "https://github.com/chnejohnson/token-heist",
+	"bugs": {
+		"url": "https://github.com/chnejohnson/token-heist/issues"
+	},
+	"homepage": "https://github.com/chnejohnson/token-heist#readme",
+	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
+	"license": "MIT",
+	"scripts": {
+		"dev": "pnpm -F app dev",
+		"format": "prettier --write \"**/*.{vue,ts,js,json}\"",
+		"preinstall": "npx only-allow pnpm",
+		"prepare": "husky install"
+	},
+	"devDependencies": {
+		"husky": "^9.0.11",
+		"lint-staged": "^15.2.2",
+		"prettier": "^3.2.5"
+	},
+	"lint-staged": {
+		"**/*.{js,ts,json,scss,css,vue}": [
+			"prettier --write"
+		]
+	}
+}
