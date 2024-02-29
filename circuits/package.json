@@ -1,7 +1,6 @@
 {
 	"name": "@token-heist/circuits",
 	"version": "0.0.0",
-	"main": "index.js",
 	"license": "MIT",
 	"scripts": {
 		"build": "./scripts/executeGroth16.sh",
@@ -16,7 +15,7 @@
 		"circomlibjs": "^0.1.7"
 	},
 	"devDependencies": {
-		"chai": "^5.1.0",
+		"chai": "^4.4.1",
 		"ffjavascript": "^0.2.63",
 		"mocha": "^10.3.0"
 	}

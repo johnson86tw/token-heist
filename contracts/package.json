@@ -1,3 +1,22 @@
 {
-	"name": "@token-heist/contracts"
+	"name": "@token-heist/contracts",
+	"version": "0.0.0",
+	"license": "MIT",
+	"scripts": {
+		"test": "hardhat test"
+	},
+	"dependencies": {
+		"@token-heist/circuits": "workspace:^"
+	},
+	"devDependencies": {
+		"@nomicfoundation/hardhat-chai-matchers": "^2.0.6",
+		"@nomicfoundation/hardhat-ethers": "^3.0.5",
+		"@nomicfoundation/hardhat-toolbox": "^4.0.0",
+		"chai": "^4.4.1",
+		"dotenv": "^16.4.5",
+		"ethers": "^6.11.1",
+		"hardhat": "^2.20.1",
+		"ts-node": "^10.9.2",
+		"typescript": "^5.3.3"
+	}
 }

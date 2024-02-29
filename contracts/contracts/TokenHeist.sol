@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
+interface IVerifier {
+    function verifyProof(
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        uint256[13] calldata _pubSignals
+    ) external view returns (bool);
+}
+
 contract TokenHeist {
+    IVerifier public immutable sneakVerifier;
+
     // Constants
     uint8 public constant MAX_COPS = 5;
     uint256 public constant STAKE_AMOUNT = 0.1 ether;
@@ -17,6 +28,7 @@ contract TokenHeist {
         Ended
     }
 
+    GameState public gameState = GameState.NotStarted;
     uint256[9] public treasure = [1, 2, 1, 2, 3, 4, 3, 5, 4];
     Role public currentPlayer = Role.Thief;
     mapping(address => uint256) public stakes;
@@ -32,10 +44,11 @@ contract TokenHeist {
     uint256 public thiefBalance = 0;
 
     // Police
-    int8[5][2] public ambushes = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]];
+    int8[2][5] public ambushes = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]]; // why it's [2][5] instead of [5][2]?
     uint8 public copCount = 0;
 
-    constructor(uint256[9] calldata _treasure) {
+    constructor(IVerifier _sneakVerifier, uint256[9] memory _treasure) {
+        sneakVerifier = _sneakVerifier;
         treasure = _treasure;
     }
 
@@ -97,18 +110,30 @@ contract TokenHeist {
     function ready() public onlyPlayer {
         require(stakes[msg.sender] > 0, "Player has not registered");
 
-        playerReady[Role(msg.sender)] = true;
+        if (msg.sender == thief) {
+            playerReady[Role.Thief] = true;
+        } else {
+            playerReady[Role.Police] = true;
+        }
 
         if (playerReady[Role.Thief] && playerReady[Role.Police]) {
             gameState = GameState.InProgress;
         }
     }
 
-    function sneak(proof, _commitment) public onlyThief {
-        // public inputs: commitment
-        require(verifier(proof), "Invalid proof");
+    function sneak(
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        uint256[13] calldata _pubSignals
+    ) public onlyThief {
+        // check public signal commitment is correct to contracts commitment
 
-        commitment = _commitment;
+        if (!sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
+            revert InvalidProof();
+        }
+
+        // commitment = _pubSignals.commitment;
 
         if (copCount == MAX_COPS) {
             gameState = GameState.Ended;
@@ -118,24 +143,34 @@ contract TokenHeist {
         }
     }
 
-    // theif reveal his path and rob the treasure
-    function rob(int256[5][2] _sneakPaths) public onlyThief {
-        require(gameState == GameState.Ended, "Game has not ended yet");
-        require(winner == thief, "Thief is not the winner");
-        // require commitment === hashed sneakPaths
-
-        for (uint8 i = 0; i < _sneakPaths.length; i++) {
-            int8[2] memory path = _sneakPaths[i];
-            // change to erc20 mint
-            thiefBalance += treasure[path[0] + path[1] * 3];
-        }
-    }
-
-    function surrender() public onlyThief {
+    function reveal(
+        int8[5][2] calldata _sneakPaths,
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        uint256[13] calldata _pubSignals
+    ) external onlyThief {
         require(gameState == GameState.InProgress, "Game has not started yet");
+
+        // check _sneakPaths === commitment
+
+        // theif wins
+        if (sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
+            // cops should be all dispatched
+            winner = thief;
+            // get treasure
+            for (uint8 i = 0; i < _sneakPaths.length; i++) {
+                // _sneakPaths value must be unsigned
+                // change to erc20 mint
+                thiefBalance += treasure[uint8(_sneakPaths[i][0]) + uint8(_sneakPaths[i][1]) * 3];
+            }
+        } else {
+            // theif loses
+            winner = police;
+            thiefBalance = 0;
+        }
+
         gameState = GameState.Ended;
-        thiefBalance = 0;
-        winner = police;
     }
 
     function dispatch(uint8 x, uint8 y) public onlyPolice {
@@ -143,16 +178,16 @@ contract TokenHeist {
         require(x < 3 && x >= 0 && y < 3 && y >= 0, "Invalid coordinates");
 
         if (ambushes[0][0] == -1 && ambushes[0][1] == -1) {
-            ambushes[0][0] = x;
-            ambushes[0][1] = y;
+            ambushes[0][0] = int8(x);
+            ambushes[0][1] = int8(y);
             copCount++;
         } else {
             for (uint8 i = 0; i < MAX_COPS; i++) {
-                require(ambushes[i][0] != x && ambushes[i][1] != y, "Ambush already exists");
+                require(ambushes[i][0] != int8(x) && ambushes[i][1] != int8(y), "Ambush already exists");
 
                 if (ambushes[i][0] == -1 && ambushes[i][1] == -1) {
-                    ambushes[i][0] = x;
-                    ambushes[i][1] = y;
+                    ambushes[i][0] = int8(x);
+                    ambushes[i][1] = int8(y);
                     copCount++;
                     break;
                 }
@@ -161,4 +196,6 @@ contract TokenHeist {
 
         currentPlayer = Role.Thief;
     }
+
+    error InvalidProof();
 }
