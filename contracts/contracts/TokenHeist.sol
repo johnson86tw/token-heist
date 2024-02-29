@@ -47,9 +47,8 @@ contract TokenHeist {
     int8[2][5] public ambushes = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]]; // why it's [2][5] instead of [5][2]?
     uint8 public copCount = 0;
 
-    constructor(IVerifier _sneakVerifier, uint256[9] memory _treasure) {
+    constructor(IVerifier _sneakVerifier) {
         sneakVerifier = _sneakVerifier;
-        treasure = _treasure;
     }
 
     modifier onlyThief() {
