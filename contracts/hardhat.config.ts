@@ -2,6 +2,8 @@ import { HardhatUserConfig } from 'hardhat/config'
 import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-toolbox'
 import '@nomicfoundation/hardhat-chai-matchers'
+import 'hardhat-gas-reporter'
+
 import * as dotenv from 'dotenv'
 dotenv.config()
 
@@ -14,6 +16,11 @@ const config: HardhatUserConfig = {
 				runs: 200,
 			},
 		},
+	},
+	gasReporter: {
+		enabled: true,
+		// currency: 'CHF',
+		// gasPrice: 21
 	},
 }
 
