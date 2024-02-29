@@ -13,16 +13,13 @@ template Overlap() {
 	signal eq_x[5];
 	signal eq_y[5];
 	signal is_equal[5];
-
-	var total = 0;
+	signal not_equal_check[5];
 	for (var i = 0; i < 5; i++) {
 		eq_x[i] <== IsEqual()([x, ambushes[i][0]]);
 		eq_y[i] <== IsEqual()([y, ambushes[i][1]]);
 
 		is_equal[i] <== eq_x[i] * eq_y[i];
-		total += is_equal[i];
+		not_equal_check[i] <== IsZero()(is_equal[i]);
+		not_equal_check[i] === 1;
 	}
-
-	signal is_zero <== IsZero()(total);
-	is_zero === 1;
 }

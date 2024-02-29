@@ -2,6 +2,10 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { CircuitInput, exportCallDataGroth16, genProofAndPublicSignals } from '../utils/zkp'
+import { F1Field } from 'ffjavascript'
+import { Scalar } from 'ffjavascript'
+const p = Scalar.fromString('21888242871839275222246405745257275088548364400416034343698204186575808495617')
+const Fr = new F1Field(p)
 
 describe('TokenHeist', function () {
 	// We define a fixture to reuse the same setup in every test.
@@ -38,7 +42,7 @@ describe('TokenHeist', function () {
 	describe('Sneak', function () {
 		it('should verify proof', async function () {
 			const { verifier } = await loadFixture(deployFixture)
-			const input: CircuitInput = {
+			const input = {
 				paths: [
 					[1, 2],
 					[2, 2],
@@ -54,12 +58,16 @@ describe('TokenHeist', function () {
 					[-1, -1],
 				],
 			}
-			const { proof, publicSignals } = await genProofAndPublicSignals(input)
-			console.log(publicSignals)
-			// let dataResult = await exportCallDataGroth16(input)
-			// expect(await verifier.verifyProof(dataResult.a, dataResult.b, dataResult.c, dataResult.Input)).to.equal(
-			// 	true,
-			// )
+
+			const circuitInputs: CircuitInput = {
+				paths: input.paths.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
+				ambushes: input.ambushes.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
+			}
+
+			const dataResult = await exportCallDataGroth16(circuitInputs)
+			expect(await verifier.verifyProof(dataResult.a, dataResult.b, dataResult.c, dataResult.Input)).to.equal(
+				true,
+			)
 		})
 	})
 })

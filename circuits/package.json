@@ -3,11 +3,11 @@
 	"version": "0.0.0",
 	"license": "MIT",
 	"scripts": {
-		"build": "./scripts/executeGroth16.sh",
+		"build": "./scripts/executeGroth16.sh && ./scripts/cpContract.sh",
 		"compile": "./scripts/compile.sh",
 		"witness": "./scripts/generateWitness.sh",
-		"test": "mocha -r ts-node/register",
-		"test-all": "mocha -r ts-node/register test/**/*.ts"
+		"test": "mocha -r ts-node/register --exit",
+		"test-all": "mocha -r ts-node/register test/**/*.ts --exit"
 	},
 	"dependencies": {
 		"circom_tester": "^0.0.20",

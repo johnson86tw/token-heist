@@ -5,8 +5,8 @@ const wasmPath = path.join(__dirname, '../node_modules/@token-heist/circuits/bui
 const zkeyPath = path.join(__dirname, '../node_modules/@token-heist/circuits/build/sneak_final.zkey')
 
 export type CircuitInput = {
-	paths: [number, number][]
-	ambushes: [number, number][]
+	paths: [bigint, bigint][]
+	ambushes: [bigint, bigint][]
 }
 
 export async function genProofAndPublicSignals(input: CircuitInput) {

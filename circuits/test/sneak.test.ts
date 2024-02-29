@@ -44,22 +44,42 @@ describe('Sneak', function () {
 	it('Should generate the proof', async function () {
 		let input = {
 			paths: [
-				[1, 2],
+				[1, 1],
+				[2, 1],
+				[2, 0],
+				[-1, -1],
+				[-1, -1],
+			],
+			ambushes: [
+				[0, 1],
 				[2, 2],
 				[-1, -1],
 				[-1, -1],
 				[-1, -1],
 			],
-			ambushes: [
-				[1, 1],
-				[1, 2],
-				[1, 3],
-				[-1, -1],
-				[-1, -1],
-			],
 		}
-		const { proof, publicSignals } = await groth16.fullProve(input, wasmPath, zkeyPath)
-		console.log(publicSignals)
+
+		const flattened = flatten(input.paths)
+		expect(flattened).to.deep.equal([4, 5, 2, -1, -1])
+
+		let last_paths = get_last_paths(input.paths)
+		const flattened_last_paths = flatten(last_paths)
+		expect(flattened_last_paths).to.deep.equal([4, 5, -1, -1, -1])
+
+		const expectedOutput1 = poseidon.F.toString(poseidon(flattened_last_paths))
+		const expectedOutput2 = poseidon.F.toString(poseidon(flattened))
+		const expectedOutput3 = '1'
+
+		const circuitInputs = {
+			paths: input.paths.map(path => [Fr.e(path[0]), Fr.e(path[1])]),
+			ambushes: input.ambushes.map(ambush => [Fr.e(ambush[0]), Fr.e(ambush[1])]),
+		}
+
+		const { publicSignals } = await groth16.fullProve(circuitInputs, wasmPath, zkeyPath)
+
+		expect(expectedOutput1).to.equal(publicSignals[0])
+		expect(expectedOutput2).to.equal(publicSignals[1])
+		expect(expectedOutput3).to.equal(publicSignals[2])
 	})
 
 	it('Should succeed with 3 outputs', async function () {

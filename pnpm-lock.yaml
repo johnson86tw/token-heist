@@ -94,6 +94,9 @@ importers:
       ethers:
         specifier: ^6.11.1
         version: 6.11.1
+      ffjavascript:
+        specifier: ^0.2.63
+        version: 0.2.63
       hardhat:
         specifier: ^2.20.1
         version: 2.20.1(ts-node@10.9.2)(typescript@5.3.3)
