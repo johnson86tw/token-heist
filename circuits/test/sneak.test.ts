@@ -7,7 +7,6 @@ import { Scalar } from 'ffjavascript'
 const p = Scalar.fromString('21888242871839275222246405745257275088548364400416034343698204186575808495617')
 const Fr = new F1Field(p)
 
-// 無法引入 snarkjs
 import { groth16 } from 'snarkjs'
 const wasmPath = './build/sneak_js/sneak.wasm'
 const zkeyPath = './build/sneak_final.zkey'

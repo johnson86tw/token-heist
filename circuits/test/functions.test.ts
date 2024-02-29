@@ -148,7 +148,7 @@ describe('get_last_move', function () {
 			assert(false, err.message)
 		}
 
-		input.last_move = [[2, 2]]
+		input.last_move = [2, 2]
 		try {
 			await circuit.calculateWitness(input)
 		} catch (err) {

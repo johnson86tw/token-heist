@@ -6,8 +6,8 @@
 		"build": "./scripts/executeGroth16.sh",
 		"compile": "./scripts/compile.sh",
 		"witness": "./scripts/generateWitness.sh",
-		"test": "mocha",
-		"test:sneak": "mocha test/sneak.mjs"
+		"test": "mocha -r ts-node/register",
+		"test-all": "mocha -r ts-node/register test/**/*.ts"
 	},
 	"dependencies": {
 		"circom_tester": "^0.0.20",
@@ -16,8 +16,11 @@
 		"snarkjs": "^0.7.3"
 	},
 	"devDependencies": {
+		"@types/mocha": "^10.0.6",
+		"@types/snarkjs": "^0.7.8",
 		"chai": "^4.4.1",
 		"ffjavascript": "^0.2.63",
-		"mocha": "^10.3.0"
+		"mocha": "^10.3.0",
+		"ts-node": "^10.9.2"
 	}
 }

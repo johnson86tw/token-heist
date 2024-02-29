@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "es2020",
+		"module": "commonjs",
+		"strict": true,
+		"esModuleInterop": true,
+		"noImplicitThis": false,
+		"resolveJsonModule": true,
+		"noImplicitAny": false,
+		"declaration": true,
+		"skipLibCheck": true,
+		"outDir": "./build",
+		"useUnknownInCatchVariables": false // allow try-catch(err) without declaring err as any
+	},
+	"exclude": ["**/node_modules"],
+	"include": ["./test"]
+}
