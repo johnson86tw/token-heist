@@ -23,12 +23,19 @@ importers:
       nuxt:
         specifier: ^3.10.3
         version: 3.10.3(vite@5.1.4)
+      snarkjs:
+        specifier: ^0.7.3
+        version: 0.7.3
       vue:
         specifier: ^3.4.19
         version: 3.4.20
       vue-router:
         specifier: ^4.3.0
         version: 4.3.0(vue@3.4.20)
+    devDependencies:
+      '@types/snarkjs':
+        specifier: ^0.7.8
+        version: 0.7.8
 
   circuits:
     dependencies:

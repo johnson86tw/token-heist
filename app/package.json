@@ -11,7 +11,11 @@
 	},
 	"dependencies": {
 		"nuxt": "^3.10.3",
+		"snarkjs": "^0.7.3",
 		"vue": "^3.4.19",
 		"vue-router": "^4.3.0"
+	},
+	"devDependencies": {
+		"@types/snarkjs": "^0.7.8"
 	}
 }

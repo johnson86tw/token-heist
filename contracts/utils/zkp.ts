@@ -29,7 +29,7 @@ export async function exportCallDataGroth16(input: CircuitInput) {
 		[argv[4], argv[5]],
 	]
 	const c = [argv[6], argv[7]]
-	const Input = []
+	const Input: string[] = []
 
 	for (let i = 8; i < argv.length; i++) {
 		Input.push(argv[i])
