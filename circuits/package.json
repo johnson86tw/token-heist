@@ -3,7 +3,7 @@
 	"version": "0.0.0",
 	"license": "MIT",
 	"scripts": {
-		"build": "./scripts/executeGroth16.sh && ./scripts/cpContract.sh",
+		"build": "./scripts/executeGroth16.sh && ./scripts/copy.sh",
 		"compile": "./scripts/compile.sh",
 		"witness": "./scripts/generateWitness.sh",
 		"test": "mocha -r ts-node/register --exit",

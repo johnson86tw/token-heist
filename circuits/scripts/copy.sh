@@ -12,3 +12,11 @@ cp ./build/SneakVerifier.sol ../contracts/contracts
 
 echo ------------------------------------------------------------
 echo "Copied SneakVerifier.sol to contracts/contracts/"
+
+cp ./build/sneak_js/sneak.wasm ../app/public
+
+echo "Copied sneak.wasm to app/public/"
+
+cp ./build/sneak_final.zkey ../app/public
+
+echo "Copied sneak_final.zkey to app/public/"
