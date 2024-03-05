@@ -79,6 +79,12 @@ importers:
       '@token-heist/circuits':
         specifier: workspace:^
         version: link:../circuits
+      circomlibjs:
+        specifier: ^0.1.7
+        version: 0.1.7
+      poseidon-solidity:
+        specifier: ^0.0.5
+        version: 0.0.5
       snarkjs:
         specifier: ^0.7.3
         version: 0.7.3
@@ -7309,6 +7315,10 @@ packages:
       jsonc-parser: 3.2.1
       mlly: 1.6.1
       pathe: 1.1.2
+    dev: false
+
+  /poseidon-solidity@0.0.5:
+    resolution: {integrity: sha512-NzrvSwHzvZgT4hvg2GyGqeR+UOU/eLSEt4wAoXEua+VaR7NTKKwx1X9bPlh1VMBEVEno+IWvkRBbidFGzTeAqQ==}
     dev: false
 
   /possible-typed-array-names@1.0.0:

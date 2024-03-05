@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.24;
 
+import "poseidon-solidity/PoseidonT6.sol";
+
 interface IVerifier {
     function verifyProof(
         uint256[2] calldata _pA,
@@ -100,15 +102,14 @@ contract TokenHeist {
         if (copUsedCount == MAX_COPS) {
             revert ShouldReveal();
         }
-
-        // TODO
-        // check public signal commitment is correct to contracts commitment
-
+        if (commitment != _pubSignals[0]) {
+            revert InvalidCommitment();
+        }
         if (!sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
             revert InvalidProof();
         }
 
-        // commitment = _pubSignals.commitment;
+        commitment = _pubSignals[1];
 
         // change to police's turn
         currentPlayer = Role.Police;
@@ -117,8 +118,10 @@ contract TokenHeist {
 
     // theif's last move, also the game's last move
     // when theif can't call sneak, theif should call reveal
+    // note that if theif generates a wrong proof and reveal, theif will lose even if theif might win.
+    // If the thief think the proof would be correct, theif should call verifier.verifyProof at first to guarantee the proof is correct.
     function reveal(
-        int8[5][2] calldata _sneakPaths,
+        int8[5] calldata _flattenedSneakPaths,
         uint256[2] calldata _pA,
         uint256[2][2] calldata _pB,
         uint256[2] calldata _pC,
@@ -128,21 +131,22 @@ contract TokenHeist {
             revert TimeUp(Role.Thief);
         }
 
-        // TODO
-        // hash _sneakPaths with poseidon
-        // check hash === commitment
-        // chech hash === public signal commitment
+        uint256 hash = hashSneakPaths(_flattenedSneakPaths);
+
+        if (hash != commitment || hash != _pubSignals[1]) {
+            revert InvalidCommitment();
+        }
 
         if (sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
             // theif wins
             if (copUsedCount == MAX_COPS) {
                 // calculate thief's prize
-                for (uint8 i = 0; i < _sneakPaths.length; i++) {
+                for (uint8 i = 0; i < _flattenedSneakPaths.length; i++) {
                     // _sneakPaths value must be unsigned
-                    if (_sneakPaths[i][0] < 0 || _sneakPaths[i][1] < 0) {
+                    if (_flattenedSneakPaths[i] < 0) {
                         revert InvalidSneakPath();
                     }
-                    thiefPrizeBalance += thiefPrizeMap[uint8(_sneakPaths[i][0]) + uint8(_sneakPaths[i][1]) * 3];
+                    thiefPrizeBalance += thiefPrizeMap[uint8(_flattenedSneakPaths[i])];
                 }
                 winnerRole = Role.Thief;
             } else {
@@ -230,6 +234,7 @@ contract TokenHeist {
     // ================================ Errors ================================
     error HasRegistered(Role);
     error InvalidProof();
+    error InvalidCommitment();
     error ShouldReveal();
     error ShouldSneak();
     error TimeUp(Role);
@@ -252,6 +257,19 @@ contract TokenHeist {
             return policeTime - block.timestamp;
         }
         return 0;
+    }
+
+    function hashSneakPaths(int8[5] calldata _flattenedSneakPaths) public pure returns (uint256) {
+        uint256 negativeOne = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
+        return PoseidonT6.hash(
+            [
+                _flattenedSneakPaths[0] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[0])),
+                _flattenedSneakPaths[1] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[1])),
+                _flattenedSneakPaths[2] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[2])),
+                _flattenedSneakPaths[3] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[3])),
+                _flattenedSneakPaths[4] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[4]))
+            ]
+        );
     }
 
     // ================================ Modifiers ================================
