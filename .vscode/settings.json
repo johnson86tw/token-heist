@@ -1,0 +1,3 @@
+{
+	"scss.lint.unknownAtRules": "ignore" // https://github.com/tailwindlabs/tailwindcss/discussions/5258
+}

@@ -1,49 +1,13 @@
-<script setup lang="ts">
-import { ethers, Interface } from 'ethers'
-
-const provider = new ethers.JsonRpcProvider('https://rpc.ankr.com/eth_sepolia')
-
-const iface = new Interface([
-	'function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[13] calldata _pubSignals) public view returns (bool)',
-])
-const sneakVerifierAddr = '0x08fAa4e244623C3205ADFfCB2A9709042ec71f19'
-const sneakVerifier = new ethers.Contract(sneakVerifierAddr, iface, provider)
-
-const input: CircuitInput = {
-	paths: [
-		[1, 2],
-		[2, 2],
-		[2, 1],
-		[-1, -1],
-		[-1, -1],
-	],
-	ambushes: [
-		[1, 1],
-		[1, 2],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-	],
-}
-
-async function onClickGenerateProof() {
-	const { proof, publicSignals } = await genProofAndPublicSignals(input)
-	console.log(proof, publicSignals)
-}
-
-async function onClickVerifyProof() {
-	const { a, b, c, Input } = await exportCallData(input)
-	const verified = await sneakVerifier.verifyProof(a, b, c, Input)
-	console.log(verified)
-}
-</script>
+<script setup lang="ts"></script>
 
 <template>
-	<div>
-		<div>hi</div>
-		<button @click="onClickGenerateProof">generate proof</button>
-		<button @click="onClickVerifyProof">verify proof</button>
-	</div>
+	<n-space justify="center" class="p-4">
+		<div class="flex flex-col gap-2">
+			<n-button>Deploy contracts</n-button>
+			<n-button>Copy Invite Link</n-button>
+			<n-button @click="navigateTo('/game')">Play</n-button>
+		</div>
+	</n-space>
 </template>
 
 <style lang="scss"></style>
