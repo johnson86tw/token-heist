@@ -13,11 +13,10 @@ interface IVerifier {
 contract TokenHeist {
     IVerifier public immutable sneakVerifier;
 
-    // Constants
     uint8 public constant MAX_COPS = 5;
-    uint256 public constant STAKE_AMOUNT = 0.1 ether;
 
     enum Role {
+        None,
         Thief,
         Police
     }
@@ -29,27 +28,233 @@ contract TokenHeist {
     }
 
     GameState public gameState = GameState.NotStarted;
-    uint256[9] public treasure = [1, 2, 1, 2, 3, 4, 3, 5, 4];
-    Role public currentPlayer = Role.Thief;
-    mapping(address => uint256) public stakes;
-    mapping(address => uint256) public bets;
-    mapping(Role => bool) public playerReady;
+    Role public currentPlayer;
+    uint256 timeLimitPerTurn;
+    uint256[9] public thiefPrizeMap;
+    uint256 public policePrize;
+    Role public winnerRole;
 
     address public thief;
     address public police;
-    address public winner;
 
     // Thief
     uint256 commitment;
-    uint256 public thiefBalance = 0;
+    uint256 public thiefPrizeBalance;
+    uint256 public thiefTime;
 
     // Police
     int8[2][5] public ambushes = [[-1, -1], [-1, -1], [-1, -1], [-1, -1], [-1, -1]]; // why it's [2][5] instead of [5][2]?
-    uint8 public copCount = 0;
+    uint8 public copUsedCount = 0;
+    uint256 public policeTime;
 
-    constructor(IVerifier _sneakVerifier) {
+    constructor(
+        IVerifier _sneakVerifier,
+        uint256[9] memory _thiefPrizeMap,
+        uint256 _policePrize,
+        uint256 _timeLimitPerTurn
+    ) {
         sneakVerifier = _sneakVerifier;
+        thiefPrizeMap = _thiefPrizeMap;
+        policePrize = _policePrize;
+        timeLimitPerTurn = _timeLimitPerTurn;
     }
+
+    function register(Role role) public payable gameNotStarted {
+        if (role == Role.Thief) {
+            if (thief != address(0)) {
+                revert HasRegistered(Role.Thief);
+            }
+            thief = payable(msg.sender);
+        } else if (role == Role.Police) {
+            if (police != address(0)) {
+                revert HasRegistered(Role.Police);
+            }
+            police = payable(msg.sender);
+        }
+
+        // start game if both players are registered
+        if (thief != address(0) && police != address(0)) {
+            gameState = GameState.InProgress;
+            currentPlayer = Role.Thief;
+            thiefTime = block.timestamp + timeLimitPerTurn;
+        }
+    }
+
+    function cancelRegistration() public gameNotStarted onlyPlayer {
+        if (msg.sender == thief) {
+            thief = address(0);
+        } else if (msg.sender == police) {
+            police = address(0);
+        }
+    }
+
+    function sneak(
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        uint256[13] calldata _pubSignals
+    ) public onlyThief gameInProgress {
+        if (thiefTime > block.timestamp) {
+            revert TimeUp(Role.Thief);
+        }
+        if (copUsedCount == MAX_COPS) {
+            revert ShouldReveal();
+        }
+
+        // TODO
+        // check public signal commitment is correct to contracts commitment
+
+        if (!sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
+            revert InvalidProof();
+        }
+
+        // commitment = _pubSignals.commitment;
+
+        // change to police's turn
+        currentPlayer = Role.Police;
+        policeTime = block.timestamp + timeLimitPerTurn;
+    }
+
+    // theif's last move, also the game's last move
+    // when theif can't call sneak, theif should call reveal
+    function reveal(
+        int8[5][2] calldata _sneakPaths,
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        uint256[13] calldata _pubSignals
+    ) external onlyThief gameInProgress {
+        if (thiefTime > block.timestamp) {
+            revert TimeUp(Role.Thief);
+        }
+
+        // TODO
+        // hash _sneakPaths with poseidon
+        // check hash === commitment
+        // chech hash === public signal commitment
+
+        if (sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
+            // theif wins
+            if (copUsedCount == MAX_COPS) {
+                // calculate thief's prize
+                for (uint8 i = 0; i < _sneakPaths.length; i++) {
+                    // _sneakPaths value must be unsigned
+                    if (_sneakPaths[i][0] < 0 || _sneakPaths[i][1] < 0) {
+                        revert InvalidSneakPath();
+                    }
+                    thiefPrizeBalance += thiefPrizeMap[uint8(_sneakPaths[i][0]) + uint8(_sneakPaths[i][1]) * 3];
+                }
+                winnerRole = Role.Thief;
+            } else {
+                revert ShouldSneak();
+            }
+        } else {
+            // theif loses
+            winnerRole = Role.Police;
+        }
+
+        gameState = GameState.Ended;
+    }
+
+    function dispatch(uint8 x, uint8 y) public onlyPolice gameInProgress {
+        if (policeTime > block.timestamp) {
+            revert TimeUp(Role.Police);
+        }
+
+        if (copUsedCount == MAX_COPS) {
+            revert CopExhausted();
+        }
+
+        if (x > 2 || x < 0 || y > 2 || y < 0) {
+            revert InvalidCoordinates();
+        }
+
+        if (ambushes[0][0] == -1 && ambushes[0][1] == -1) {
+            ambushes[0][0] = int8(x);
+            ambushes[0][1] = int8(y);
+            copUsedCount++;
+        } else {
+            for (uint8 i = 0; i < MAX_COPS; i++) {
+                if (ambushes[i][0] == int8(x) && ambushes[i][1] == int8(y)) {
+                    revert AmbushExists();
+                }
+
+                if (ambushes[i][0] == -1 && ambushes[i][1] == -1) {
+                    ambushes[i][0] = int8(x);
+                    ambushes[i][1] = int8(y);
+                    copUsedCount++;
+                    break;
+                }
+            }
+        }
+
+        // change to thief's turn
+        currentPlayer = Role.Thief;
+        thiefTime = block.timestamp + timeLimitPerTurn;
+    }
+
+    function endGameIfTimeUp() public gameInProgress {
+        if (currentPlayer == Role.Thief && thiefTime < block.timestamp) {
+            winnerRole = Role.Police;
+        } else if (currentPlayer == Role.Police && policeTime < block.timestamp) {
+            winnerRole = Role.Thief;
+        }
+
+        gameState = GameState.Ended;
+    }
+
+    function claimPrize() public onlyWinner gameEnded {
+        if (winnerRole == Role.Thief) {
+            payable(thief).transfer(thiefPrizeBalance);
+        } else if (winnerRole == Role.Police) {
+            payable(police).transfer(policePrize);
+        }
+        reset();
+    }
+
+    function reset() public gameEnded {
+        thief = address(0);
+        police = address(0);
+        winnerRole = Role.None;
+        currentPlayer = Role.None;
+        gameState = GameState.NotStarted;
+        thiefTime = 0;
+        policeTime = 0;
+        copUsedCount = 0;
+        for (uint8 i = 0; i < MAX_COPS; i++) {
+            ambushes[i][0] = -1;
+            ambushes[i][1] = -1;
+        }
+    }
+
+    // ================================ Errors ================================
+    error HasRegistered(Role);
+    error InvalidProof();
+    error ShouldReveal();
+    error ShouldSneak();
+    error TimeUp(Role);
+    error InvalidSneakPath();
+    error InvalidCoordinates();
+    error CopExhausted();
+    error AmbushExists();
+
+    // ================================ View functions ================================
+
+    function theifTimeLeft() public view returns (uint256) {
+        if (currentPlayer == Role.Thief) {
+            return thiefTime - block.timestamp;
+        }
+        return 0;
+    }
+
+    function policeTimeLeft() public view returns (uint256) {
+        if (currentPlayer == Role.Police) {
+            return policeTime - block.timestamp;
+        }
+        return 0;
+    }
+
+    // ================================ Modifiers ================================
 
     modifier onlyThief() {
         require(msg.sender == thief, "Only thief can call this function");
@@ -66,135 +271,26 @@ contract TokenHeist {
         _;
     }
 
-    function register(Role role, uint256 bet) public payable {
-        require(gameState == GameState.NotStarted, "Game has already started");
-        require(msg.value == STAKE_AMOUNT + bet, "Invalid stake amount");
-
-        if (role == Role.Thief) {
-            require(thief == address(0), "Thief has already registered");
-            thief = payable(msg.sender);
-            stakes[msg.sender] = STAKE_AMOUNT;
-            bets[msg.sender] = bet;
-        } else if (role == Role.Police) {
-            require(police == address(0), "Police has already registered");
-            police = payable(msg.sender);
-            stakes[msg.sender] = STAKE_AMOUNT;
-            bets[msg.sender] = bet;
-        }
+    modifier onlyWinner() {
+        require(
+            (msg.sender == thief && winnerRole == Role.Thief) || (msg.sender == police && winnerRole == Role.Police),
+            "Only winner can call this function"
+        );
+        _;
     }
 
-    function cancelRegistration() public onlyPlayer {
-        require(gameState == GameState.NotStarted, "Game has already started");
-        gameState = GameState.Ended;
+    modifier gameNotStarted() {
+        require(gameState == GameState.NotStarted, "Game is already in progress or ended");
+        _;
     }
 
-    function withdraw() public onlyPlayer {
+    modifier gameInProgress() {
+        require(gameState == GameState.InProgress, "Game is not in progress");
+        _;
+    }
+
+    modifier gameEnded() {
         require(gameState == GameState.Ended, "Game has not ended yet");
-
-        if (winner == address(0)) {
-            payable(msg.sender).transfer(stakes[msg.sender]);
-        } else {
-            if (msg.sender == winner) {
-                uint256 amount = stakes[msg.sender] + bets[thief] + bets[msg.sender];
-                stakes[msg.sender] = 0;
-                bets[thief] = 0;
-                payable(msg.sender).transfer(amount);
-            } else {
-                stakes[msg.sender] = 0;
-                payable(msg.sender).transfer(stakes[msg.sender]);
-            }
-        }
+        _;
     }
-
-    function ready() public onlyPlayer {
-        require(stakes[msg.sender] > 0, "Player has not registered");
-
-        if (msg.sender == thief) {
-            playerReady[Role.Thief] = true;
-        } else {
-            playerReady[Role.Police] = true;
-        }
-
-        if (playerReady[Role.Thief] && playerReady[Role.Police]) {
-            gameState = GameState.InProgress;
-        }
-    }
-
-    function sneak(
-        uint256[2] calldata _pA,
-        uint256[2][2] calldata _pB,
-        uint256[2] calldata _pC,
-        uint256[13] calldata _pubSignals
-    ) public onlyThief {
-        // check public signal commitment is correct to contracts commitment
-
-        if (!sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
-            revert InvalidProof();
-        }
-
-        // commitment = _pubSignals.commitment;
-
-        if (copCount == MAX_COPS) {
-            gameState = GameState.Ended;
-            winner = thief;
-        } else {
-            currentPlayer = Role.Police;
-        }
-    }
-
-    function reveal(
-        int8[5][2] calldata _sneakPaths,
-        uint256[2] calldata _pA,
-        uint256[2][2] calldata _pB,
-        uint256[2] calldata _pC,
-        uint256[13] calldata _pubSignals
-    ) external onlyThief {
-        require(gameState == GameState.InProgress, "Game has not started yet");
-
-        // check _sneakPaths === commitment
-
-        // theif wins
-        if (sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
-            // cops should be all dispatched
-            winner = thief;
-            // get treasure
-            for (uint8 i = 0; i < _sneakPaths.length; i++) {
-                // _sneakPaths value must be unsigned
-                // change to erc20 mint
-                thiefBalance += treasure[uint8(_sneakPaths[i][0]) + uint8(_sneakPaths[i][1]) * 3];
-            }
-        } else {
-            // theif loses
-            winner = police;
-            thiefBalance = 0;
-        }
-
-        gameState = GameState.Ended;
-    }
-
-    function dispatch(uint8 x, uint8 y) public onlyPolice {
-        require(copCount <= MAX_COPS, "All cops are already dispatched");
-        require(x < 3 && x >= 0 && y < 3 && y >= 0, "Invalid coordinates");
-
-        if (ambushes[0][0] == -1 && ambushes[0][1] == -1) {
-            ambushes[0][0] = int8(x);
-            ambushes[0][1] = int8(y);
-            copCount++;
-        } else {
-            for (uint8 i = 0; i < MAX_COPS; i++) {
-                require(ambushes[i][0] != int8(x) && ambushes[i][1] != int8(y), "Ambush already exists");
-
-                if (ambushes[i][0] == -1 && ambushes[i][1] == -1) {
-                    ambushes[i][0] = int8(x);
-                    ambushes[i][1] = int8(y);
-                    copCount++;
-                    break;
-                }
-            }
-        }
-
-        currentPlayer = Role.Thief;
-    }
-
-    error InvalidProof();
 }
