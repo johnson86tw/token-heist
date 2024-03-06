@@ -2,7 +2,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { CircuitInput, exportCallDataGroth16 } from '../utils/zkp'
-import { get_last_paths, flatten } from '../utils/paths'
+import { get_last_paths, flatten, flatten2, exportFlatten2 } from '../utils/board'
 
 import { F1Field } from 'ffjavascript'
 import { Scalar } from 'ffjavascript'
@@ -95,9 +95,16 @@ describe('SneakVerifier', function () {
 			const expectedOutput3 = '1'
 
 			const dataResult = await exportCallDataGroth16(input)
+
+			// public signal: commitment of flattened_last_paths
 			expect(dataResult.Input[0]).to.deep.equal(expectedOutput1)
+			// public signal: commitment of flattened move
 			expect(dataResult.Input[1]).to.deep.equal(expectedOutput2)
+			// public signal: noticed
 			expect(dataResult.Input[2]).to.equal(expectedOutput3)
+
+			// public signals: ambushes
+			expect(dataResult.Input.slice(3, dataResult.Input.length)).to.deep.equal(exportFlatten2(input.ambushes))
 
 			expect(await verifier.verifyProof(dataResult.a, dataResult.b, dataResult.c, dataResult.Input)).to.equal(
 				true,

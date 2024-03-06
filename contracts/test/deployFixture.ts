@@ -1,0 +1,67 @@
+import { ethers } from 'hardhat'
+import { TokenHeist__factory } from '../typechain-types'
+
+import { PoseidonT6 } from 'poseidon-solidity'
+
+export async function deployFixture() {
+	const [owner, player1, player2] = await ethers.getSigners()
+
+	// deploy SneakVerifier
+	const Verifier = await ethers.getContractFactory('SneakVerifier')
+	const verifier = await Verifier.deploy()
+	const verifierAddr = await verifier.getAddress()
+
+	// deploy PoseidonT6
+	try {
+		if ((await owner.provider.getCode(PoseidonT6.proxyAddress)) === '0x') {
+			console.log('no proxy')
+			// fund the keyless account
+			await owner.sendTransaction({
+				to: PoseidonT6.from,
+				value: PoseidonT6.gas,
+			})
+
+			// then send the presigned transaction deploying the proxy
+			await ethers.provider.broadcastTransaction(PoseidonT6.tx)
+		}
+
+		// Then deploy the hasher, if needed
+		if ((await owner.provider.getCode(PoseidonT6.address)) === '0x') {
+			await owner.sendTransaction({
+				to: PoseidonT6.proxyAddress,
+				data: PoseidonT6.data,
+			})
+		}
+	} catch (err) {
+		console.error('Failed to deploy PoseidonT6:', err)
+	}
+
+	// deploy TokenHeist
+	const tokenHeistFactory = new TokenHeist__factory(
+		{
+			'poseidon-solidity/PoseidonT6.sol:PoseidonT6': PoseidonT6.address,
+		},
+		owner,
+	)
+
+	const prizeMap = [1, 2, 1, 2, 3, 4, 3, 5, 4]
+	const timeLimitPerTurn = 180 // 3 minutes
+	const timeUpPoints = 20
+
+	const tokenHeist = await tokenHeistFactory.deploy(verifierAddr, prizeMap, timeLimitPerTurn, timeUpPoints)
+	const tokenHesitAddr = await tokenHeist.getAddress()
+	const tokenHeistPlayer1 = tokenHeist.connect(player1)
+	const tokenHeistPlayer2 = tokenHeist.connect(player2)
+
+	return {
+		owner,
+		player1,
+		player2,
+		verifier,
+		verifierAddr,
+		tokenHeist,
+		tokenHesitAddr,
+		tokenHeistPlayer1,
+		tokenHeistPlayer2,
+	}
+}

@@ -6,6 +6,10 @@ import { Scalar } from 'ffjavascript'
 const p = Scalar.fromString('21888242871839275222246405745257275088548364400416034343698204186575808495617')
 const Fr = new F1Field(p)
 
+export function toFiniteField(x: number): bigint {
+	return Fr.e(x)
+}
+
 const wasmPath = path.join(__dirname, '../node_modules/@token-heist/circuits/build/sneak_js/sneak.wasm')
 const zkeyPath = path.join(__dirname, '../node_modules/@token-heist/circuits/build/sneak_final.zkey')
 

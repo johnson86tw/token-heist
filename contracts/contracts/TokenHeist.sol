@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "poseidon-solidity/PoseidonT6.sol";
+import "hardhat/console.sol";
 
 interface IVerifier {
     function verifyProof(
@@ -182,9 +183,13 @@ contract TokenHeist {
         if (copUsedCount == MAX_COPS) {
             revert ShouldReveal();
         }
+        if (!isValidAmbushes(_pubSignals)) {
+            revert InvalidAmbushes();
+        }
         if (commitment > 0 && commitment != _pubSignals[0]) {
             revert InvalidCommitment();
         }
+
         if (!sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
             revert InvalidProof();
         }
@@ -212,7 +217,11 @@ contract TokenHeist {
         uint256[2] calldata _pC,
         uint256[13] calldata _pubSignals
     ) external onlyThief gameInProgress {
-        uint256 hash = hashSneakPaths(_flattenedSneakPaths);
+        if (!isValidAmbushes(_pubSignals)) {
+            revert InvalidAmbushes();
+        }
+
+        uint256 hash = hashCommitment(_flattenedSneakPaths);
 
         if (hash != commitment || hash != _pubSignals[1]) {
             revert InvalidCommitment();
@@ -280,6 +289,7 @@ contract TokenHeist {
     error HasRegistered(Role);
     error InvalidProof();
     error InvalidCommitment();
+    error InvalidAmbushes();
     error ShouldReveal();
     error ShouldSneak();
     error InvalidSneakPath();
@@ -307,15 +317,38 @@ contract TokenHeist {
         return 0;
     }
 
-    function hashSneakPaths(int8[5] calldata _flattenedSneakPaths) public pure returns (uint256) {
+    function flattenedAmbushes() public view returns (int8[10] memory) {
+        int8[10] memory res;
+        for (uint8 i = 0; i < MAX_COPS; i++) {
+            res[i * 2] = ambushes[i][0];
+            res[i * 2 + 1] = ambushes[i][1];
+        }
+        return res;
+    }
+
+    function isValidAmbushes(uint256[13] calldata _pubSignals) public view returns (bool) {
+        uint256 negativeOne = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
+        for (uint8 i = 3; i < 13; i++) {
+            if (flattenedAmbushes()[i - 3] == int8(-1)) {
+                if (_pubSignals[i] != negativeOne) {
+                    return false;
+                }
+            } else if (_pubSignals[i] != uint256(uint8(flattenedAmbushes()[i - 3]))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function hashCommitment(int8[5] calldata _coordinates) public pure returns (uint256) {
         uint256 negativeOne = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
         return PoseidonT6.hash(
             [
-                _flattenedSneakPaths[0] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[0])),
-                _flattenedSneakPaths[1] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[1])),
-                _flattenedSneakPaths[2] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[2])),
-                _flattenedSneakPaths[3] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[3])),
-                _flattenedSneakPaths[4] == -1 ? negativeOne : uint256(uint8(_flattenedSneakPaths[4]))
+                _coordinates[0] == -1 ? negativeOne : uint256(uint8(_coordinates[0])),
+                _coordinates[1] == -1 ? negativeOne : uint256(uint8(_coordinates[1])),
+                _coordinates[2] == -1 ? negativeOne : uint256(uint8(_coordinates[2])),
+                _coordinates[3] == -1 ? negativeOne : uint256(uint8(_coordinates[3])),
+                _coordinates[4] == -1 ? negativeOne : uint256(uint8(_coordinates[4]))
             ]
         );
     }
