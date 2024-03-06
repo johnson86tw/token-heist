@@ -34,15 +34,15 @@ export async function exportCallDataGroth16(input: CircuitInput) {
 	const argv = calldata
 		.replace(/["[\]\s]/g, '')
 		.split(',')
-		.map(x => BigInt(x).toString())
+		.map(x => BigInt(x))
 
-	const a = [argv[0], argv[1]]
-	const b = [
+	const a: [bigint, bigint] = [argv[0], argv[1]]
+	const b: [[bigint, bigint], [bigint, bigint]] = [
 		[argv[2], argv[3]],
 		[argv[4], argv[5]],
 	]
-	const c = [argv[6], argv[7]]
-	const Input: string[] = []
+	const c: [bigint, bigint] = [argv[6], argv[7]]
+	const Input: bigint[] = []
 
 	for (let i = 8; i < argv.length; i++) {
 		Input.push(argv[i])

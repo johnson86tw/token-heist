@@ -182,7 +182,7 @@ contract TokenHeist {
         if (copUsedCount == MAX_COPS) {
             revert ShouldReveal();
         }
-        if (commitment != _pubSignals[0]) {
+        if (commitment > 0 && commitment != _pubSignals[0]) {
             revert InvalidCommitment();
         }
         if (!sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {

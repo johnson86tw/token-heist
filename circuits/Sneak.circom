@@ -58,6 +58,7 @@ template Sneak() {
 	/* Check the move is within the range of -1 to 8 */
 	/* Check the move is either to an adjacent cell or staying in place */
 	component valid_move = Move();
+	valid_move.paths <== paths;
 	valid_move.x1 <== last_move[0];
 	valid_move.y1 <== last_move[1];
 	valid_move.x2 <== move[0];

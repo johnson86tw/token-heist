@@ -1,7 +1,7 @@
 import { assert } from 'chai'
 import { wasm } from 'circom_tester'
 
-describe('move', function () {
+describe('Move', function () {
 	let circuit
 
 	before(async function () {
@@ -10,21 +10,72 @@ describe('move', function () {
 
 	it('Should generate the witness successfully', async function () {
 		let input = {
-			x1: 1,
+			paths: [
+				[1, 1],
+				[2, 1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+			x1: 1, // last move
 			y1: 1,
-			x2: 2,
+			x2: 2, // new move
 			y2: 1,
 		}
 		const witness = await circuit.calculateWitness(input)
 		await circuit.assertOut(witness, {})
 	})
 
-	// [[0,0], [1,0], [2,0]
-	// [0,1], [1,1], [2,1]
-	// [0,2], [1,2], [2,2]]
+	it('should play the first move', async function () {
+		const input = {
+			paths: [
+				[2, 1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+			x1: -1,
+			y1: -1,
+			x2: 2,
+			y2: 1,
+		}
+		try {
+			await circuit.calculateWitness(input)
+		} catch (err) {
+			assert(false, err.message)
+		}
+	})
 
+	it('should fail to play the first move', async function () {
+		const input = {
+			paths: [
+				[-1, -1],
+				[2, 1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+			x1: -1,
+			y1: -1,
+			x2: 2,
+			y2: 1,
+		}
+		try {
+			await circuit.calculateWitness(input)
+			assert(false, 'Should have failed')
+		} catch (err) {
+			assert(err.message.includes('Assert Failed'))
+		}
+	})
+
+	/**
+		[[0,0], [1,0], [2,0],
+		 [0,1], [1,1], [2,1],
+		 [0,2], [1,2], [2,2]]
+	 */
 	it('Should move or stay put', async function () {
-		const pos = [
+		const board = [
 			[0, 0],
 			[1, 0],
 			[2, 0],
@@ -44,9 +95,9 @@ describe('move', function () {
 			[0, -1],
 		]
 
-		for (let i = 0; i < pos.length; i++) {
-			const x1 = pos[i][0]
-			const y1 = pos[i][1]
+		for (let i = 0; i < board.length; i++) {
+			const x1 = board[i][0]
+			const y1 = board[i][1]
 
 			for (let j = 0; j < moves.length; j++) {
 				const x2 = x1 + moves[j][0]
@@ -55,6 +106,13 @@ describe('move', function () {
 					// console.log('x1:', x1, 'y1:', y1, 'x2:', x2, 'y2:', y2)
 					try {
 						await circuit.calculateWitness({
+							paths: [
+								[1, 1],
+								[2, 1],
+								[-1, -1],
+								[-1, -1],
+								[-1, -1],
+							], // no need to check the paths, just make sure that it's not the first move
 							x1,
 							y1,
 							x2,
@@ -69,7 +127,7 @@ describe('move', function () {
 	})
 
 	it('Should fail because of invalid move', async function () {
-		const pos = [
+		const board = [
 			[0, 0],
 			[1, 0],
 			[2, 0],
@@ -89,9 +147,9 @@ describe('move', function () {
 			[0, -1],
 		]
 
-		for (let i = 0; i < pos.length; i++) {
-			const x1 = pos[i][0]
-			const y1 = pos[i][1]
+		for (let i = 0; i < board.length; i++) {
+			const x1 = board[i][0]
+			const y1 = board[i][1]
 
 			for (let j = 0; j < moves.length; j++) {
 				const x2 = x1 + moves[j][0]
@@ -102,6 +160,13 @@ describe('move', function () {
 				}
 				try {
 					await circuit.calculateWitness({
+						paths: [
+							[1, 1],
+							[2, 1],
+							[-1, -1],
+							[-1, -1],
+							[-1, -1],
+						], // no need to check the paths, just make sure that it's not the first move
 						x1,
 						y1,
 						x2,

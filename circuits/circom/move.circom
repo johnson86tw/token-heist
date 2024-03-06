@@ -1,10 +1,12 @@
 pragma circom 2.1.7;
 
 include "../node_modules/circomlib/circuits/comparators.circom";
+include "./isFirstMove.circom";
 
 // Check whether it's a valid move
 
 template Move() {
+	signal input paths[5][2];
 	// last move
 	signal input x1;
 	signal input y1;
@@ -23,8 +25,8 @@ template Move() {
 	signal lower_y <==  GreaterEqThan(2)([y2, 0]);
 	1 === upper_y * lower_y;
 
-	// check if the new move is a valid move
-
+	// check if the new move is adjacent to the last move
+	
 	var total = 0;
 	var moves[5][2] = [[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]];
 
@@ -38,6 +40,16 @@ template Move() {
 		move[i] <== move_x[i] * move_y[i];
 		total += move[i];
 	}
+
+	// Check if it's the first move
+	// 1. last move should be (-1, -1)
+	// 2. paths should be the first move
+	signal first_move_x <== IsEqual()([x1, -1]);
+	signal first_move_y <== IsEqual()([y1, -1]);
+	signal is_first_move <== IsFirstMove()(paths);
+	signal temp <== first_move_x * first_move_y;
+	signal first_move <== temp * is_first_move;
+	total += first_move;
 
 	signal valid_move <== IsEqual()([total, 1]);
 	valid_move === 1;

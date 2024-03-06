@@ -116,6 +116,69 @@ describe('Sneak', function () {
 		assert(Fr.eq(Fr.e(witness[2]), Fr.e(expectedOutput2)))
 		assert(Fr.eq(Fr.e(witness[3]), Fr.e(expectedOutput3)))
 	})
+
+	describe('The First Move', function () {
+		it('should succeed with the first move', async function () {
+			let input = {
+				paths: [
+					[1, 0],
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+				],
+				ambushes: [
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+				],
+			}
+			const flattened = flatten(input.paths)
+			expect(flattened).to.deep.equal([1, -1, -1, -1, -1])
+
+			let last_paths = get_last_paths(input.paths)
+			const flattened_last_paths = flatten(last_paths)
+			expect(flattened_last_paths).to.deep.equal([-1, -1, -1, -1, -1])
+
+			const expectedOutput1 = poseidon.F.toString(poseidon(flattened_last_paths))
+			const expectedOutput2 = poseidon.F.toString(poseidon(flattened))
+			const expectedOutput3 = 0
+
+			const witness = await circuit.calculateWitness(input)
+			assert(Fr.eq(Fr.e(witness[0]), Fr.e(1)))
+			assert(Fr.eq(Fr.e(witness[1]), Fr.e(expectedOutput1)))
+			assert(Fr.eq(Fr.e(witness[2]), Fr.e(expectedOutput2)))
+			assert(Fr.eq(Fr.e(witness[3]), Fr.e(expectedOutput3)))
+		})
+
+		it('should fail due to invalid move', async function () {
+			let input = {
+				paths: [
+					[-1, -1],
+					[1, 0],
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+				],
+				ambushes: [
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+					[-1, -1],
+				],
+			}
+
+			try {
+				await circuit.calculateWitness(input)
+				assert(false, 'Invalid move should fail')
+			} catch (err) {
+				assert(err.message.includes('Assert Failed'))
+			}
+		})
+	})
 })
 
 function get_last_paths(paths) {

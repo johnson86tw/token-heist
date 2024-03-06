@@ -128,7 +128,7 @@ describe('TokenHeist', function () {
 			tokenHeistPlayer2 = fixture.tokenHesit.connect(player2)
 		})
 
-		it('should registry two players and start the game', async function () {
+		it('should register two players and start the game', async function () {
 			await expect(tokenHeistPlayer1.register(1))
 				.to.emit(tokenHeistPlayer1, 'Registered')
 				.withArgs(player1.address)
@@ -154,7 +154,7 @@ describe('TokenHeist', function () {
 
 			thief's score: 8
 		 */
-		it('should play a round', async function () {
+		it('should play the first move by thief', async function () {
 			const input: CircuitInput = {
 				paths: [
 					[1, 0],
@@ -172,7 +172,7 @@ describe('TokenHeist', function () {
 				],
 			}
 			const dataResult = await exportCallDataGroth16(input)
-			// @ts-ignore
+
 			await expect(tokenHeistPlayer1.sneak(dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
 				.to.emit(tokenHeistPlayer2, 'Sneak')
 				.withArgs(1, player1.address, dataResult.Input[1])
