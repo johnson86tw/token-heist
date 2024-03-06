@@ -3,7 +3,9 @@
 	"version": "0.0.0",
 	"license": "MIT",
 	"scripts": {
-		"test": "hardhat test"
+		"build": "hardhat compile && hardhat typechain",
+		"test": "hardhat test",
+		"typechain": "hardhat typechain"
 	},
 	"dependencies": {
 		"@token-heist/circuits": "workspace:^",

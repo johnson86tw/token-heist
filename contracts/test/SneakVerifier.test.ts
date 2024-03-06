@@ -41,10 +41,10 @@ describe('SneakVerifier', function () {
 		})
 	})
 
-	describe('Sneak', function () {
+	describe('Verification', function () {
 		it('should verify proof', async function () {
 			const { verifier } = await loadFixture(deployFixture)
-			const input = {
+			const input: CircuitInput = {
 				paths: [
 					[1, 2],
 					[2, 2],
@@ -61,12 +61,7 @@ describe('SneakVerifier', function () {
 				],
 			}
 
-			const circuitInputs: CircuitInput = {
-				paths: input.paths.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
-				ambushes: input.ambushes.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
-			}
-
-			const dataResult = await exportCallDataGroth16(circuitInputs)
+			const dataResult = await exportCallDataGroth16(input)
 			expect(await verifier.verifyProof(dataResult.a, dataResult.b, dataResult.c, dataResult.Input)).to.equal(
 				true,
 			)
@@ -74,7 +69,7 @@ describe('SneakVerifier', function () {
 
 		it('should have correct public signals', async function () {
 			const { verifier } = await loadFixture(deployFixture)
-			const input = {
+			const input: CircuitInput = {
 				paths: [
 					[1, 2],
 					[2, 2],
@@ -89,11 +84,6 @@ describe('SneakVerifier', function () {
 					[-1, -1],
 					[-1, -1],
 				],
-			}
-
-			const circuitInputs: CircuitInput = {
-				paths: input.paths.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
-				ambushes: input.ambushes.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
 			}
 
 			const flattened = flatten(input.paths)
@@ -104,7 +94,7 @@ describe('SneakVerifier', function () {
 			const expectedOutput2 = poseidon.F.toString(poseidon(flattened))
 			const expectedOutput3 = '1'
 
-			const dataResult = await exportCallDataGroth16(circuitInputs)
+			const dataResult = await exportCallDataGroth16(input)
 			expect(dataResult.Input[0]).to.deep.equal(expectedOutput1)
 			expect(dataResult.Input[1]).to.deep.equal(expectedOutput2)
 			expect(dataResult.Input[2]).to.equal(expectedOutput3)

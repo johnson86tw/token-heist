@@ -35,18 +35,18 @@ contract TokenHeist {
     uint256[2] scores; // [player1 score, player2 score]
 
     IVerifier public immutable sneakVerifier;
-    uint256[9] public thiefPrizeMap;
+    uint256[9] public prizeMap;
     uint256 timeLimitPerTurn;
     uint256 timeUpPoints;
 
     constructor(
         IVerifier _sneakVerifier,
-        uint256[9] memory _thiefPrizeMap,
+        uint256[9] memory _prizeMap,
         uint256 _timeLimitPerTurn,
         uint256 _timeUpPoints
     ) {
         sneakVerifier = _sneakVerifier;
-        thiefPrizeMap = _thiefPrizeMap;
+        prizeMap = _prizeMap;
         timeLimitPerTurn = _timeLimitPerTurn;
         timeUpPoints = _timeUpPoints;
     }
@@ -68,6 +68,7 @@ contract TokenHeist {
 
     event Registered(address indexed player);
     event CancelledRegistration(address indexed player);
+    event GameStarted(address indexed player1, address indexed player2);
     event GameEnded(address indexed winner, uint256[2] scores);
     event Sneak(GameState gameState, address indexed player, uint256 commitment);
     event Reveal(GameState gameState, address indexed player, int8[5] flattenedSneakPaths);
@@ -96,13 +97,15 @@ contract TokenHeist {
     /**
      * @dev Start the game if both players have registered.
      */
-    function register(Role role) public gameNotStarted {
-        if (role == Role.Thief) {
+    function register(uint8 n) public gameNotStarted {
+        require(n == 1 || n == 2, "Invalid player number");
+
+        if (n == 1) {
             if (player1 != address(0)) {
                 revert HasRegistered(Role.Thief);
             }
             player1 = msg.sender;
-        } else if (role == Role.Police) {
+        } else if (n == 2) {
             if (player2 != address(0)) {
                 revert HasRegistered(Role.Police);
             }
@@ -117,6 +120,7 @@ contract TokenHeist {
             roles[Role.Police] = player2;
             currentRole = Role.Thief;
             thiefTime = block.timestamp + timeLimitPerTurn;
+            emit GameStarted(player1, player2);
         }
     }
 
@@ -224,7 +228,7 @@ contract TokenHeist {
                     if (_flattenedSneakPaths[i] < 0) {
                         revert InvalidSneakPath();
                     }
-                    score += thiefPrizeMap[uint8(_flattenedSneakPaths[i])];
+                    score += prizeMap[uint8(_flattenedSneakPaths[i])];
                 }
                 heist(score);
                 emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);

@@ -1,21 +1,34 @@
 import { groth16 } from 'snarkjs'
 import path from 'path'
 
+import { F1Field } from 'ffjavascript'
+import { Scalar } from 'ffjavascript'
+const p = Scalar.fromString('21888242871839275222246405745257275088548364400416034343698204186575808495617')
+const Fr = new F1Field(p)
+
 const wasmPath = path.join(__dirname, '../node_modules/@token-heist/circuits/build/sneak_js/sneak.wasm')
 const zkeyPath = path.join(__dirname, '../node_modules/@token-heist/circuits/build/sneak_final.zkey')
 
 export type CircuitInput = {
-	paths: [bigint, bigint][]
-	ambushes: [bigint, bigint][]
+	paths: [number, number][]
+	ambushes: [number, number][]
 }
 
 export async function genProofAndPublicSignals(input: CircuitInput) {
-	const { proof, publicSignals } = await groth16.fullProve(input, wasmPath, zkeyPath)
+	const formatInput = {
+		paths: input.paths.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
+		ambushes: input.ambushes.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
+	}
+	const { proof, publicSignals } = await groth16.fullProve(formatInput, wasmPath, zkeyPath)
 	return { proof, publicSignals }
 }
 
 export async function exportCallDataGroth16(input: CircuitInput) {
-	const { proof: _proof, publicSignals: _publicSignals } = await groth16.fullProve(input, wasmPath, zkeyPath)
+	const formatInput = {
+		paths: input.paths.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
+		ambushes: input.ambushes.map(([x, y]) => [Fr.e(x), Fr.e(y)]),
+	}
+	const { proof: _proof, publicSignals: _publicSignals } = await groth16.fullProve(formatInput, wasmPath, zkeyPath)
 	const calldata = await groth16.exportSolidityCallData(_proof, _publicSignals)
 
 	const argv = calldata
