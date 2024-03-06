@@ -96,9 +96,6 @@ contract TokenHeist {
         uint256[2] calldata _pC,
         uint256[13] calldata _pubSignals
     ) public onlyThief gameInProgress {
-        if (thiefTime > block.timestamp) {
-            revert TimeUp(Role.Thief);
-        }
         if (copUsedCount == MAX_COPS) {
             revert ShouldReveal();
         }
@@ -127,10 +124,6 @@ contract TokenHeist {
         uint256[2] calldata _pC,
         uint256[13] calldata _pubSignals
     ) external onlyThief gameInProgress {
-        if (thiefTime > block.timestamp) {
-            revert TimeUp(Role.Thief);
-        }
-
         uint256 hash = hashSneakPaths(_flattenedSneakPaths);
 
         if (hash != commitment || hash != _pubSignals[1]) {
@@ -161,10 +154,6 @@ contract TokenHeist {
     }
 
     function dispatch(uint8 x, uint8 y) public onlyPolice gameInProgress {
-        if (policeTime > block.timestamp) {
-            revert TimeUp(Role.Police);
-        }
-
         if (copUsedCount == MAX_COPS) {
             revert CopExhausted();
         }
@@ -197,14 +186,14 @@ contract TokenHeist {
         thiefTime = block.timestamp + timeLimitPerTurn;
     }
 
-    function endGameIfTimeUp() public gameInProgress {
-        if (currentPlayer == Role.Thief && thiefTime < block.timestamp) {
+    function endGameIfTimeUp() public gameInProgress onlyPlayer {
+        if (currentPlayer == Role.Thief && thiefTime < block.timestamp && msg.sender == police) {
             winnerRole = Role.Police;
-        } else if (currentPlayer == Role.Police && policeTime < block.timestamp) {
+            gameState = GameState.Ended;
+        } else if (currentPlayer == Role.Police && policeTime < block.timestamp && msg.sender == thief) {
             winnerRole = Role.Thief;
+            gameState = GameState.Ended;
         }
-
-        gameState = GameState.Ended;
     }
 
     function claimPrize() public onlyWinner gameEnded {
