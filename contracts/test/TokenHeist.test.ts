@@ -65,10 +65,10 @@ describe('TokenHeist', function () {
 		})
 
 		const thiefPrizeMap = [1, 2, 1, 2, 3, 4, 3, 5, 4]
-		const policePrize = 10
 		const timeLimitPerTurn = 180 // 3 minutes
+		const timeUpPoints = 20
 
-		const tokenHesit = await TokenHeist.deploy(verifierAddr, thiefPrizeMap, policePrize, timeLimitPerTurn)
+		const tokenHesit = await TokenHeist.deploy(verifierAddr, thiefPrizeMap, timeLimitPerTurn, timeUpPoints)
 		const tokenHesitAddr = await tokenHesit.getAddress()
 
 		return {

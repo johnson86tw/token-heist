@@ -13,8 +13,6 @@ interface IVerifier {
 }
 
 contract TokenHeist {
-    IVerifier public immutable sneakVerifier;
-
     uint8 public constant MAX_COPS = 5;
 
     enum Role {
@@ -23,25 +21,42 @@ contract TokenHeist {
         Police
     }
 
+    Role public currentRole;
+
     enum GameState {
         NotStarted,
-        InProgress,
+        RoundOneInProgress,
+        RoundTwoInProgress,
         Ended
     }
 
     GameState public gameState = GameState.NotStarted;
-    Role public currentPlayer;
-    uint256 timeLimitPerTurn;
-    uint256[9] public thiefPrizeMap;
-    uint256 public policePrize;
-    Role public winnerRole;
 
-    address public thief;
-    address public police;
+    uint256[2] scores; // [player1 score, player2 score]
+
+    IVerifier public immutable sneakVerifier;
+    uint256[9] public thiefPrizeMap;
+    uint256 timeLimitPerTurn;
+    uint256 timeUpPoints;
+
+    constructor(
+        IVerifier _sneakVerifier,
+        uint256[9] memory _thiefPrizeMap,
+        uint256 _timeLimitPerTurn,
+        uint256 _timeUpPoints
+    ) {
+        sneakVerifier = _sneakVerifier;
+        thiefPrizeMap = _thiefPrizeMap;
+        timeLimitPerTurn = _timeLimitPerTurn;
+        timeUpPoints = _timeUpPoints;
+    }
+
+    address public player1;
+    address public player2;
+    mapping(Role => address) public roles;
 
     // Thief
     uint256 commitment;
-    uint256 public thiefPrizeBalance;
     uint256 public thiefTime;
 
     // Police
@@ -49,45 +64,109 @@ contract TokenHeist {
     uint8 public copUsedCount = 0;
     uint256 public policeTime;
 
-    constructor(
-        IVerifier _sneakVerifier,
-        uint256[9] memory _thiefPrizeMap,
-        uint256 _policePrize,
-        uint256 _timeLimitPerTurn
-    ) {
-        sneakVerifier = _sneakVerifier;
-        thiefPrizeMap = _thiefPrizeMap;
-        policePrize = _policePrize;
-        timeLimitPerTurn = _timeLimitPerTurn;
+    // ================================ Events ================================
+
+    event Registered(address indexed player);
+    event CancelledRegistration(address indexed player);
+    event GameEnded(address indexed winner, uint256[2] scores);
+    event Sneak(GameState gameState, address indexed player, uint256 commitment);
+    event Reveal(GameState gameState, address indexed player, int8[5] flattenedSneakPaths);
+    event Dispatch(GameState gameState, address indexed player);
+    event TimeUp(GameState gameState, Role role, address indexed player);
+
+    // ================================ Functions ================================
+
+    function reset() public gameEnded {
+        gameState = GameState.NotStarted;
+        currentRole = Role.None;
+        player1 = address(0);
+        player2 = address(0);
+        roles[Role.Thief] = address(0);
+        roles[Role.Police] = address(0);
+        scores = [0, 0];
+        commitment = 0;
+        thiefTime = 0;
+        copUsedCount = 0;
+        policeTime = 0;
+        for (uint8 i = 0; i < MAX_COPS; i++) {
+            ambushes[i] = [-1, -1];
+        }
     }
 
-    function register(Role role) public payable gameNotStarted {
+    /**
+     * @dev Start the game if both players have registered.
+     */
+    function register(Role role) public gameNotStarted {
         if (role == Role.Thief) {
-            if (thief != address(0)) {
+            if (player1 != address(0)) {
                 revert HasRegistered(Role.Thief);
             }
-            thief = payable(msg.sender);
+            player1 = msg.sender;
         } else if (role == Role.Police) {
-            if (police != address(0)) {
+            if (player2 != address(0)) {
                 revert HasRegistered(Role.Police);
             }
-            police = payable(msg.sender);
+            player2 = msg.sender;
         }
 
-        // start game if both players are registered
-        if (thief != address(0) && police != address(0)) {
-            gameState = GameState.InProgress;
-            currentPlayer = Role.Thief;
+        emit Registered(msg.sender);
+
+        if (player1 != address(0) && player2 != address(0)) {
+            gameState = GameState.RoundOneInProgress;
+            roles[Role.Thief] = player1;
+            roles[Role.Police] = player2;
+            currentRole = Role.Thief;
             thiefTime = block.timestamp + timeLimitPerTurn;
         }
     }
 
     function cancelRegistration() public gameNotStarted onlyPlayer {
-        if (msg.sender == thief) {
-            thief = address(0);
-        } else if (msg.sender == police) {
-            police = address(0);
+        if (msg.sender == player1) {
+            player1 = address(0);
+        } else if (msg.sender == player2) {
+            player2 = address(0);
         }
+        emit CancelledRegistration(msg.sender);
+    }
+
+    function heist(uint256 score) private {
+        if (gameState == GameState.RoundOneInProgress) {
+            scores[0] = score;
+            gameState = GameState.RoundTwoInProgress;
+
+            // interchange
+            roles[Role.Thief] = player2;
+            roles[Role.Police] = player1;
+            currentRole = Role.Thief;
+            thiefTime = block.timestamp + timeLimitPerTurn;
+        } else if (gameState == GameState.RoundTwoInProgress) {
+            scores[0] = score;
+            gameState = GameState.Ended;
+
+            address winner;
+            if (scores[0] > scores[1]) {
+                winner = player1;
+            } else if (scores[0] < scores[1]) {
+                winner = player2;
+            }
+
+            emit GameEnded(winner, scores);
+        }
+    }
+
+    function endRoundIfTimeUp() public gameInProgress onlyPlayer returns (bool) {
+        if (currentRole == Role.Thief && thiefTime < block.timestamp && msg.sender == roles[Role.Police]) {
+            // police wins
+            heist(0);
+            emit TimeUp(gameState, Role.Thief, roles[Role.Thief]);
+            return true;
+        } else if (currentRole == Role.Police && policeTime < block.timestamp && msg.sender == roles[Role.Thief]) {
+            // thief wins
+            heist(timeUpPoints);
+            emit TimeUp(gameState, Role.Police, roles[Role.Police]);
+            return true;
+        }
+        return false;
     }
 
     function sneak(
@@ -108,15 +187,20 @@ contract TokenHeist {
 
         commitment = _pubSignals[1];
 
-        // change to police's turn
-        currentPlayer = Role.Police;
+        // change to player2's turn
+        currentRole = Role.Police;
         policeTime = block.timestamp + timeLimitPerTurn;
+
+        emit Sneak(gameState, roles[Role.Thief], commitment);
     }
 
-    // theif's last move, also the game's last move
-    // when theif can't call sneak, theif should call reveal
-    // note that if theif generates a wrong proof and reveal, theif will lose even if theif might win.
-    // If the thief think the proof would be correct, theif should call verifier.verifyProof at first to guarantee the proof is correct.
+    /**
+     * @dev theif's last move, also the game's last move
+     * when theif can't call sneak, theif should call reveal
+     *
+     * Notice that if theif generates a wrong proof and reveal, theif will lose even if theif might win.
+     * If the player1 think the proof would be correct, theif should call verifier.verifyProof at first to guarantee the proof is correct.
+     */
     function reveal(
         int8[5] calldata _flattenedSneakPaths,
         uint256[2] calldata _pA,
@@ -133,24 +217,24 @@ contract TokenHeist {
         if (sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
             // theif wins
             if (copUsedCount == MAX_COPS) {
-                // calculate thief's prize
+                // calculate player1's score
+                uint256 score = 0;
                 for (uint8 i = 0; i < _flattenedSneakPaths.length; i++) {
                     // _sneakPaths value must be unsigned
                     if (_flattenedSneakPaths[i] < 0) {
                         revert InvalidSneakPath();
                     }
-                    thiefPrizeBalance += thiefPrizeMap[uint8(_flattenedSneakPaths[i])];
+                    score += thiefPrizeMap[uint8(_flattenedSneakPaths[i])];
                 }
-                winnerRole = Role.Thief;
+                heist(score);
+                emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
             } else {
                 revert ShouldSneak();
             }
         } else {
-            // theif loses
-            winnerRole = Role.Police;
+            heist(0);
+            emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
         }
-
-        gameState = GameState.Ended;
     }
 
     function dispatch(uint8 x, uint8 y) public onlyPolice gameInProgress {
@@ -181,43 +265,11 @@ contract TokenHeist {
             }
         }
 
-        // change to thief's turn
-        currentPlayer = Role.Thief;
+        // change to player1's turn
+        currentRole = Role.Thief;
         thiefTime = block.timestamp + timeLimitPerTurn;
-    }
 
-    function endGameIfTimeUp() public gameInProgress onlyPlayer {
-        if (currentPlayer == Role.Thief && thiefTime < block.timestamp && msg.sender == police) {
-            winnerRole = Role.Police;
-            gameState = GameState.Ended;
-        } else if (currentPlayer == Role.Police && policeTime < block.timestamp && msg.sender == thief) {
-            winnerRole = Role.Thief;
-            gameState = GameState.Ended;
-        }
-    }
-
-    function claimPrize() public onlyWinner gameEnded {
-        if (winnerRole == Role.Thief) {
-            payable(thief).transfer(thiefPrizeBalance);
-        } else if (winnerRole == Role.Police) {
-            payable(police).transfer(policePrize);
-        }
-        reset();
-    }
-
-    function reset() public gameEnded {
-        thief = address(0);
-        police = address(0);
-        winnerRole = Role.None;
-        currentPlayer = Role.None;
-        gameState = GameState.NotStarted;
-        thiefTime = 0;
-        policeTime = 0;
-        copUsedCount = 0;
-        for (uint8 i = 0; i < MAX_COPS; i++) {
-            ambushes[i][0] = -1;
-            ambushes[i][1] = -1;
-        }
+        emit Dispatch(gameState, roles[Role.Police]);
     }
 
     // ================================ Errors ================================
@@ -226,7 +278,6 @@ contract TokenHeist {
     error InvalidCommitment();
     error ShouldReveal();
     error ShouldSneak();
-    error TimeUp(Role);
     error InvalidSneakPath();
     error InvalidCoordinates();
     error CopExhausted();
@@ -234,15 +285,19 @@ contract TokenHeist {
 
     // ================================ View functions ================================
 
+    function currentPlayer() public view returns (address) {
+        return roles[currentRole];
+    }
+
     function theifTimeLeft() public view returns (uint256) {
-        if (currentPlayer == Role.Thief) {
+        if (currentRole == Role.Thief) {
             return thiefTime - block.timestamp;
         }
         return 0;
     }
 
     function policeTimeLeft() public view returns (uint256) {
-        if (currentPlayer == Role.Police) {
+        if (currentRole == Role.Police) {
             return policeTime - block.timestamp;
         }
         return 0;
@@ -264,25 +319,17 @@ contract TokenHeist {
     // ================================ Modifiers ================================
 
     modifier onlyThief() {
-        require(msg.sender == thief, "Only thief can call this function");
+        require(msg.sender == roles[Role.Thief], "Only player1 can call this function");
         _;
     }
 
     modifier onlyPolice() {
-        require(msg.sender == police, "Only police can call this function");
+        require(msg.sender == roles[Role.Police], "Only player2 can call this function");
         _;
     }
 
     modifier onlyPlayer() {
-        require(msg.sender == thief || msg.sender == police, "Only players can call this function");
-        _;
-    }
-
-    modifier onlyWinner() {
-        require(
-            (msg.sender == thief && winnerRole == Role.Thief) || (msg.sender == police && winnerRole == Role.Police),
-            "Only winner can call this function"
-        );
+        require(msg.sender == player1 || msg.sender == player2, "Only players can call this function");
         _;
     }
 
@@ -292,7 +339,10 @@ contract TokenHeist {
     }
 
     modifier gameInProgress() {
-        require(gameState == GameState.InProgress, "Game is not in progress");
+        require(
+            gameState == GameState.RoundOneInProgress || gameState == GameState.RoundTwoInProgress,
+            "Game is not in progress"
+        );
         _;
     }
 
