@@ -1,15 +1,5 @@
 {
-	"compilerOptions": {
-		"target": "es2020",
-		"module": "commonjs",
-		"strict": true,
-		"esModuleInterop": true,
-		"moduleResolution": "node",
-		"forceConsistentCasingInFileNames": true,
-		"noImplicitAny": false, // 讓 import ffjavascript 沒有 type 也不會出現紅字
-		"skipLibCheck": true,
-		"resolveJsonModule": true
-	},
+	"extends": "../tsconfig.json",
 	"include": ["./typechain", "./test/*.ts", "./scripts"],
 	"files": ["hardhat.config.ts"]
 }

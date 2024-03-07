@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "poseidon-solidity/PoseidonT6.sol";
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 interface IVerifier {
     function verifyProof(
@@ -71,7 +71,7 @@ contract TokenHeist {
     event CancelledRegistration(address indexed player);
     event GameStarted(address indexed player1, address indexed player2);
     event GameEnded(address indexed winner, uint256[2] scores);
-    event Sneak(GameState gameState, address indexed player, uint256 commitment);
+    event Sneak(GameState gameState, address indexed player, bool noticed);
     event Reveal(GameState gameState, address indexed player, int8[5] flattenedSneakPaths);
     event Dispatch(GameState gameState, address indexed player);
     event TimeUp(GameState gameState, Role role, address indexed player);
@@ -200,7 +200,7 @@ contract TokenHeist {
         currentRole = Role.Police;
         policeTime = block.timestamp + timeLimitPerTurn;
 
-        emit Sneak(gameState, roles[Role.Thief], commitment);
+        emit Sneak(gameState, roles[Role.Thief], _pubSignals[2] != 0);
     }
 
     /**
