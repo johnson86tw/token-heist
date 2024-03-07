@@ -55,3 +55,8 @@ export function exportFlatten2(coordinates) {
 		bigint,
 	]
 }
+
+export function exportContractFlatten(coordinates) {
+	const flattened = flatten2(coordinates)
+	return flattened.map(x => BigInt(x)) as [bigint, bigint, bigint, bigint, bigint]
+}

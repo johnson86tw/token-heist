@@ -2,7 +2,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers'
 import { expect } from 'chai'
 import { ethers } from 'hardhat'
 import { CircuitInput, exportCallDataGroth16 } from '../utils/zkp'
-import { get_last_paths, flatten, flatten2, exportFlatten2 } from '../utils/board'
+import { get_last_paths, flatten, flatten2, exportFlatten2 } from '../utils'
 
 import { F1Field } from 'ffjavascript'
 import { Scalar } from 'ffjavascript'

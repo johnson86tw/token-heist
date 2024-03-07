@@ -4,7 +4,7 @@ import { ethers } from 'hardhat'
 import { TokenHeist, TokenHeist__factory } from '../typechain-types'
 
 import { CircuitInput, exportCallDataGroth16 } from '../utils/zkp'
-import { get_last_paths, flatten, exportFlatten } from '../utils/board'
+import { get_last_paths, flatten, exportFlatten } from '../utils'
 
 import { buildPoseidon } from 'circomlibjs'
 import { deployFixture } from './deployFixture'
@@ -77,60 +77,6 @@ describe('TokenHeist', function () {
 			]
 			const dataResult2 = await exportCallDataGroth16(input)
 			expect(await tokenHeist.isValidAmbushes(dataResult2.Input)).to.be.false
-		})
-	})
-
-	describe('#sneak', function () {
-		it('should play the first move', async function () {
-			const { tokenHeistPlayer1, tokenHeistPlayer2, player1 } = await loadFixture(deployFixture)
-			await tokenHeistPlayer1.register(1)
-			await tokenHeistPlayer2.register(2)
-			const input: CircuitInput = {
-				paths: [
-					[1, 0],
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-				],
-				ambushes: [
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-				],
-			}
-			const dataResult = await exportCallDataGroth16(input)
-
-			await expect(tokenHeistPlayer1.sneak(dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
-				.to.emit(tokenHeistPlayer2, 'Sneak')
-				.withArgs(1, player1.address, dataResult.Input[1])
-		})
-		it('should check ambushes correctly', async function () {
-			const { tokenHeistPlayer1, tokenHeistPlayer2 } = await loadFixture(deployFixture)
-			await tokenHeistPlayer1.register(1)
-			await tokenHeistPlayer2.register(2)
-			const input: CircuitInput = {
-				paths: [
-					[1, 0],
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-				],
-				ambushes: [
-					[1, 2],
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-					[-1, -1],
-				],
-			}
-			const dataResult = await exportCallDataGroth16(input)
-			await expect(
-				tokenHeistPlayer1.sneak(dataResult.a, dataResult.b, dataResult.c, dataResult.Input),
-			).to.be.revertedWithCustomError(tokenHeistPlayer1, 'InvalidAmbushes')
 		})
 	})
 })

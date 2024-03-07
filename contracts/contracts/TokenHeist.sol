@@ -33,7 +33,7 @@ contract TokenHeist {
 
     GameState public gameState = GameState.NotStarted;
 
-    uint256[2] scores; // [player1 score, player2 score]
+    uint256[2] public scores; // [player1 score, player2 score]
 
     IVerifier public immutable sneakVerifier;
     uint256[9] public prizeMap;
@@ -57,7 +57,7 @@ contract TokenHeist {
     mapping(Role => address) public roles;
 
     // Thief
-    uint256 commitment;
+    uint256 public commitment;
     uint256 public thiefTime;
 
     // Police
@@ -144,6 +144,11 @@ contract TokenHeist {
             roles[Role.Police] = player1;
             currentRole = Role.Thief;
             thiefTime = block.timestamp + timeLimitPerTurn;
+            commitment = 0;
+            copUsedCount = 0;
+            for (uint8 i = 0; i < MAX_COPS; i++) {
+                ambushes[i] = [-1, -1];
+            }
         } else if (gameState == GameState.RoundTwoInProgress) {
             scores[0] = score;
             gameState = GameState.Ended;
@@ -159,7 +164,7 @@ contract TokenHeist {
         }
     }
 
-    function endRoundIfTimeUp() public gameInProgress onlyPlayer returns (bool) {
+    function timeUp() public gameInProgress onlyPlayer returns (bool) {
         if (currentRole == Role.Thief && thiefTime < block.timestamp && msg.sender == roles[Role.Police]) {
             // police wins
             heist(0);
@@ -231,22 +236,27 @@ contract TokenHeist {
             // theif wins
             if (copUsedCount == MAX_COPS) {
                 // calculate player1's score
+                // feat: the path that has been walked cannot be calculated repeatedly
+                bool[9] memory visited = [false, false, false, false, false, false, false, false, false];
                 uint256 score = 0;
                 for (uint8 i = 0; i < _flattenedSneakPaths.length; i++) {
                     // _sneakPaths value must be unsigned
                     if (_flattenedSneakPaths[i] < 0) {
                         revert InvalidSneakPath();
                     }
-                    score += prizeMap[uint8(_flattenedSneakPaths[i])];
+                    if (!visited[uint8(_flattenedSneakPaths[i])]) {
+                        score += prizeMap[uint8(_flattenedSneakPaths[i])];
+                    }
+                    visited[uint8(_flattenedSneakPaths[i])] = true;
                 }
-                heist(score);
                 emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
+                heist(score);
             } else {
                 revert ShouldSneak();
             }
         } else {
-            heist(0);
             emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
+            heist(0);
         }
     }
 
