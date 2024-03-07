@@ -222,10 +222,6 @@ contract TokenHeist {
         uint256[2] calldata _pC,
         uint256[13] calldata _pubSignals
     ) external onlyThief gameInProgress {
-        if (!isValidAmbushes(_pubSignals)) {
-            revert InvalidAmbushes();
-        }
-
         uint256 hash = hashCommitment(_flattenedSneakPaths);
 
         if (hash != commitment || hash != _pubSignals[1]) {
@@ -233,30 +229,33 @@ contract TokenHeist {
         }
 
         if (sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
-            // theif wins
-            if (copUsedCount == MAX_COPS) {
-                // calculate player1's score
-                // feat: the path that has been walked cannot be calculated repeatedly
-                bool[9] memory visited = [false, false, false, false, false, false, false, false, false];
-                uint256 score = 0;
-                for (uint8 i = 0; i < _flattenedSneakPaths.length; i++) {
-                    // _sneakPaths value must be unsigned
-                    if (_flattenedSneakPaths[i] < 0) {
-                        revert InvalidSneakPath();
+            // thief admits defeat by sending a valid proof with valid commitment but invalid ambushes
+            if (isValidAmbushes(_pubSignals)) {
+                // theif wins
+                if (copUsedCount == MAX_COPS) {
+                    // calculate player1's score
+                    // feat: the path that has been walked cannot be calculated repeatedly
+                    bool[9] memory visited = [false, false, false, false, false, false, false, false, false];
+                    uint256 score = 0;
+                    for (uint8 i = 0; i < _flattenedSneakPaths.length; i++) {
+                        // _sneakPaths value must be unsigned
+                        if (_flattenedSneakPaths[i] < 0) {
+                            revert InvalidSneakPath();
+                        }
+                        if (!visited[uint8(_flattenedSneakPaths[i])]) {
+                            score += prizeMap[uint8(_flattenedSneakPaths[i])];
+                        }
+                        visited[uint8(_flattenedSneakPaths[i])] = true;
                     }
-                    if (!visited[uint8(_flattenedSneakPaths[i])]) {
-                        score += prizeMap[uint8(_flattenedSneakPaths[i])];
-                    }
-                    visited[uint8(_flattenedSneakPaths[i])] = true;
+                    emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
+                    heist(score);
+                } else {
+                    revert ShouldSneak();
                 }
-                emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
-                heist(score);
             } else {
-                revert ShouldSneak();
+                emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
+                heist(0);
             }
-        } else {
-            emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
-            heist(0);
         }
     }
 
