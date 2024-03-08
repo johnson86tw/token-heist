@@ -2,7 +2,7 @@
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"outDir": "./build",
-		"types": ["node"]
+		"noImplicitAny": true
 	},
 	"include": ["./src", ".env"]
 }
