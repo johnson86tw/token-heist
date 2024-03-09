@@ -4,7 +4,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
 	devtools: { enabled: true },
-	modules: ['@nuxtjs/tailwindcss'],
+	modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt'],
 	css: ['@/styles/main.scss'],
 
 	// naive-ui: https://www.naiveui.com/en-US/os-theme/docs/ssr

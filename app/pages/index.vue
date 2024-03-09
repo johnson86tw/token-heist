@@ -1,45 +1,43 @@
 <script setup lang="ts">
-import { io } from 'socket.io-client'
-import { v4 as uuidv4 } from 'uuid'
+import { ws, sendLobbyCount } from '~/core/websocket'
+import {
+	WebSocketChannel,
+	type ClientReceivedMessage,
+	type LobbyCountClientData,
+} from '@token-heist/backend/src/types/socketTypes'
 
-const clientId = uuidv4()
+// ----------------------- feat: lobby online count -----------------------
 
-enum WebSocketEvent {
-	LobbyCount = 'LobbyCount',
-	RoomCount = 'RoomCount',
-	Registering = 'Registering',
-	OpponentDisconnect = 'OpponentDisconnect',
-}
-
-const onlineNum = ref(0)
-
-const socket = io('ws://localhost:8000/lobby')
+const lobbyCount = ref(0)
 
 if (process.client) {
-	socket.on('connect', () => {
-		socket.emit(WebSocketEvent.LobbyCount, clientId)
+	onMounted(() => {
+		// In the initial loading of this page, the ws will be in a connecting state, and it can't send messages yet
+		// So we sendLobbyCount when the ws is just open and landing on this page, see websocket.ts
+		if (ws.readyState === ws.OPEN) {
+			sendLobbyCount(true)
+		}
 	})
 
-	socket.on(WebSocketEvent.LobbyCount, count => {
-		onlineNum.value = count
-	})
+	ws.onmessage = event => {
+		const msg: ClientReceivedMessage<LobbyCountClientData> = JSON.parse(event.data)
+		switch (msg.route) {
+			case WebSocketChannel.LobbyCount:
+				lobbyCount.value = msg.data.count
+				break
+		}
+	}
 
-	socket.on('disconnect', () => {
-		console.log('disconnected')
+	onUnmounted(() => {
+		sendLobbyCount(false)
 	})
 }
-
-onUnmounted(() => {
-	if (process.client) {
-		socket.disconnect()
-	}
-})
 </script>
 
 <template>
 	<n-space justify="center" class="p-4">
 		<div class="flex flex-col gap-2">
-			<p>{{ onlineNum }}</p>
+			<p>{{ lobbyCount }}</p>
 			<n-button>Deploy contracts</n-button>
 			<n-button>Copy Invite Link</n-button>
 			<n-button @click="navigateTo('/game')">Play</n-button>

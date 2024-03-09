@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, type GlobalThemeOverrides } from 'naive-ui'
+import { createWebSocket } from './core/websocket'
 
 const themeOverrides: GlobalThemeOverrides = {
 	common: {
@@ -11,6 +12,12 @@ const themeOverrides: GlobalThemeOverrides = {
 		// colorHover: '#FF0000',
 		// textColorHover: '#FF0000',
 	},
+}
+
+const appStore = useAppStore()
+
+if (process.client) {
+	createWebSocket()
 }
 </script>
 

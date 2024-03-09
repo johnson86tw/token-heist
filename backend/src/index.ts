@@ -2,9 +2,9 @@ import path from 'path'
 import fs from 'fs'
 import express from 'express'
 import { createServer } from 'http'
-import { createSocketManager } from './socketManager'
 import cors from 'cors'
 import { logger } from './config'
+import { createWebSocketServer } from './websocket/wss'
 
 async function main() {
 	logger.info('Starting server...')
@@ -13,11 +13,10 @@ async function main() {
 	const port = process.env.PORT ?? 8000
 
 	app.use(express.json())
+	app.use(cors())
 
 	const httpServer = createServer(app)
-	createSocketManager(httpServer)
-
-	app.use(cors())
+	createWebSocketServer(httpServer)
 
 	httpServer.listen(port, () => logger.info(`Listening on port ${port}`))
 
