@@ -18,6 +18,7 @@ export type CSLobbyCount = {
 
 export type CSRoomCount = {
 	clientId: string
+	roomId: string
 	enter: boolean
 }
 

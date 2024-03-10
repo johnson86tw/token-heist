@@ -36,7 +36,7 @@ if (process.client) {
 			<p>{{ lobbyCount }}</p>
 			<n-button>Deploy contracts</n-button>
 			<n-button>Copy Invite Link</n-button>
-			<n-button @click="navigateTo('/game')">Play</n-button>
+			<n-button @click="navigateTo('/game/0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5')"> Play </n-button>
 		</div>
 	</n-space>
 </template>

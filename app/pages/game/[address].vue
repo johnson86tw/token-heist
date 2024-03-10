@@ -1,4 +1,41 @@
-<script setup>
+<script setup lang="ts">
+import { ws, sendRoomCount } from '~/core/websocket'
+import { Channel, type ServerSendMsg, type SSRoomCount } from '@token-heist/backend/src/types/socketTypes'
+
+const route = useRoute()
+const address = route.params.address as string
+
+if (!address) {
+	navigateTo('/')
+}
+
+// ----------------------- feat: lobby online count -----------------------
+
+const roomCount = ref(0)
+
+if (process.client) {
+	onMounted(() => {
+		if (ws.readyState === ws.OPEN) {
+			sendRoomCount(address, true)
+		}
+	})
+
+	ws.onmessage = event => {
+		const msg: ServerSendMsg<SSRoomCount> = JSON.parse(event.data)
+		switch (msg.type) {
+			case Channel.RoomCount:
+				roomCount.value = msg.data.count
+				break
+		}
+	}
+
+	onUnmounted(() => {
+		sendRoomCount(address, false)
+	})
+}
+
+// ----------------------- feat: tic-tac-toe -----------------------
+
 const player = ref('X')
 const board = ref([
 	['', '', ''],
@@ -56,6 +93,8 @@ const ResetGame = () => {
 		<NuxtLink to="/">
 			<h1 class="mb-8 text-3xl font-bold uppercase">Token Heist</h1>
 		</NuxtLink>
+
+		<p>{{ roomCount }}</p>
 
 		<h3 class="text-xl mb-4">Player {{ player }}'s turn</h3>
 
