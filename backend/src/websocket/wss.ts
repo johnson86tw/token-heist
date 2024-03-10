@@ -1,7 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws'
 import http from 'http'
 import { logger } from '../config'
-import { ClientReceivedMessage, ServerReceivedMessage, WebSocketChannel } from '../types/socketTypes'
+import { ServerSendMsg, ClientSendMsg, Channel } from '../types/socketTypes'
 import { onlineCountHandler } from './onlineCount'
 
 /**
@@ -16,15 +16,21 @@ const store = {
 
 export let wss: WebSocketServer
 
-export function createWebSocketServer(server: http.Server) {
-	wss = new WebSocketServer({ server })
+export function createWebSocketServer(server: http.Server, allowOrigin: string) {
+	wss = new WebSocketServer({ server, host: 'local' })
 
-	wss.on('connection', function connection(ws) {
+	wss.on('connection', (ws, req) => {
+		const origin = req.headers.origin
+		console.log(origin)
+		if (origin !== allowOrigin) {
+			ws.terminate()
+		}
+
 		// 什麼情況會發生 error 事件？
 		ws.on('error', logger.error)
 
 		ws.on('message', function message(data) {
-			let message: ServerReceivedMessage
+			let message: ClientSendMsg<any>
 			try {
 				message = parseMessage(data)
 			} catch (err) {
@@ -36,13 +42,13 @@ export function createWebSocketServer(server: http.Server) {
 			const clientId = message.data.clientId
 			logger.info(`ws:${clientId}:${JSON.stringify(message)}`)
 
-			switch (message.route) {
-				case WebSocketChannel.LobbyCount || WebSocketChannel.RoomCount:
+			switch (message.type) {
+				case Channel.LobbyCount || Channel.RoomCount:
 					onlineCountHandler(ws, message, store)
 					break
-				case WebSocketChannel.Registering:
+				case Channel.Registering:
 					break
-				case WebSocketChannel.OpponentDisconnect:
+				case Channel.OpponentDisconnect:
 					break
 				default:
 					break
@@ -56,20 +62,20 @@ export function createWebSocketServer(server: http.Server) {
 function parseMessage(data: WebSocket.RawData) {
 	let parsed
 	try {
-		parsed = JSON.parse(data.toString()) as ServerReceivedMessage
+		parsed = JSON.parse(data.toString()) as ClientSendMsg<any>
 	} catch (err) {
 		throw new Error('Invalid message')
 	}
 
-	const route = parsed.route
-	if (!Object.values(WebSocketChannel).includes(route)) {
-		throw new Error('Invalid route')
+	const type = parsed.type
+	if (!Object.values(Channel).includes(type)) {
+		throw new Error('Invalid channel type')
 	}
 
 	return parsed
 }
 
-export function broadcast<T>(msg: ClientReceivedMessage<T>) {
+export function broadcast<T>(msg: ServerSendMsg<T>) {
 	for (let client of wss.clients) {
 		if (client.readyState === WebSocket.OPEN) {
 			client.send(JSON.stringify(msg))

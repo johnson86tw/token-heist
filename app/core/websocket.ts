@@ -1,9 +1,5 @@
 import { v4 as uuidv4 } from 'uuid'
-import {
-	WebSocketChannel,
-	type ServerReceivedMessage,
-	type LobbyCountServerData,
-} from '@token-heist/backend/src/types/socketTypes'
+import { Channel, type ClientSendMsg, type CSLobbyCount } from '@token-heist/backend/src/types/socketTypes'
 
 export let ws: WebSocket
 export let clientId: string
@@ -35,8 +31,8 @@ export function createWebSocket() {
 }
 
 export function sendLobbyCount(enter: boolean) {
-	const message: ServerReceivedMessage<LobbyCountServerData> = {
-		route: WebSocketChannel.LobbyCount,
+	const message: ClientSendMsg<CSLobbyCount> = {
+		type: Channel.LobbyCount,
 		data: {
 			clientId,
 			enter,

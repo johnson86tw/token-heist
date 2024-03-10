@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { ws, sendLobbyCount } from '~/core/websocket'
-import {
-	WebSocketChannel,
-	type ClientReceivedMessage,
-	type LobbyCountClientData,
-} from '@token-heist/backend/src/types/socketTypes'
+import { Channel, type ServerSendMsg, type SSLobbyCount } from '@token-heist/backend/src/types/socketTypes'
 
 // ----------------------- feat: lobby online count -----------------------
 
@@ -20,9 +16,9 @@ if (process.client) {
 	})
 
 	ws.onmessage = event => {
-		const msg: ClientReceivedMessage<LobbyCountClientData> = JSON.parse(event.data)
-		switch (msg.route) {
-			case WebSocketChannel.LobbyCount:
+		const msg: ServerSendMsg<SSLobbyCount> = JSON.parse(event.data)
+		switch (msg.type) {
+			case Channel.LobbyCount:
 				lobbyCount.value = msg.data.count
 				break
 		}

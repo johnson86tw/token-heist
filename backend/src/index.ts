@@ -3,7 +3,7 @@ import fs from 'fs'
 import express from 'express'
 import { createServer } from 'http'
 import cors from 'cors'
-import { logger } from './config'
+import { CLIENT_URL, logger } from './config'
 import { createWebSocketServer } from './websocket/wss'
 
 async function main() {
@@ -16,7 +16,7 @@ async function main() {
 	app.use(cors())
 
 	const httpServer = createServer(app)
-	createWebSocketServer(httpServer)
+	createWebSocketServer(httpServer, CLIENT_URL)
 
 	httpServer.listen(port, () => logger.info(`Listening on port ${port}`))
 

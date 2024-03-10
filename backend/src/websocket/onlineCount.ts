@@ -1,19 +1,17 @@
 import { broadcast } from './wss'
-import {
-	WebSocketChannel,
-	ServerReceivedMessage,
-	LobbyCountClientData,
-	RoomCountData,
-	LobbyCountServerData,
-} from '../types/socketTypes'
+import { Channel, ClientSendMsg, SSLobbyCount, SSRoomCount, CSLobbyCount, CSRoomCount } from '../types/socketTypes'
 import { WebSocket } from 'ws'
 
-export function onlineCountHandler(ws: WebSocket, message: ServerReceivedMessage, store: any) {
-	switch (message.route) {
-		case WebSocketChannel.LobbyCount:
-			handleLobbyCount(ws, message as ServerReceivedMessage<LobbyCountServerData>, store)
+export function onlineCountHandler(
+	ws: WebSocket,
+	message: ClientSendMsg<CSLobbyCount> | ClientSendMsg<CSRoomCount>,
+	store: any,
+) {
+	switch (message.type) {
+		case Channel.LobbyCount:
+			handleLobbyCount(ws, message, store)
 			break
-		case WebSocketChannel.RoomCount:
+		case Channel.RoomCount:
 			handleRoomCount(ws, message, store)
 			break
 		default:
@@ -24,8 +22,8 @@ export function onlineCountHandler(ws: WebSocket, message: ServerReceivedMessage
 	ws.on('close', () => {
 		if (store.lobbyCount.has(message.data.clientId)) {
 			store.lobbyCount.delete(message.data.clientId)
-			broadcast<LobbyCountClientData>({
-				route: WebSocketChannel.LobbyCount,
+			broadcast<SSLobbyCount>({
+				type: Channel.LobbyCount,
 				data: {
 					count: store.lobbyCount.size,
 				},
@@ -33,8 +31,8 @@ export function onlineCountHandler(ws: WebSocket, message: ServerReceivedMessage
 		}
 		if (store.roomCount.has(message.data.clientId)) {
 			store.roomCount.delete(message.data.clientId)
-			broadcast<RoomCountData>({
-				route: WebSocketChannel.RoomCount,
+			broadcast<SSRoomCount>({
+				type: Channel.RoomCount,
 				data: {
 					count: store.roomCount.size,
 				},
@@ -43,24 +41,28 @@ export function onlineCountHandler(ws: WebSocket, message: ServerReceivedMessage
 	})
 }
 
-function handleLobbyCount(ws: WebSocket, message: ServerReceivedMessage<LobbyCountServerData>, store: any) {
+function handleLobbyCount(ws: WebSocket, message: ClientSendMsg<CSLobbyCount>, store: any) {
 	if (message.data.enter) {
 		store.lobbyCount.add(message.data.clientId)
 	} else {
 		store.lobbyCount.delete(message.data.clientId)
 	}
-	broadcast<LobbyCountClientData>({
-		route: WebSocketChannel.LobbyCount,
+	broadcast<SSLobbyCount>({
+		type: Channel.LobbyCount,
 		data: {
 			count: store.lobbyCount.size,
 		},
 	})
 }
 
-function handleRoomCount(ws: WebSocket, message: ServerReceivedMessage, store: any) {
-	store.roomCount.add(message.data.clientId)
-	broadcast<RoomCountData>({
-		route: WebSocketChannel.RoomCount,
+function handleRoomCount(ws: WebSocket, message: ClientSendMsg<CSRoomCount>, store: any) {
+	if (message.data.enter) {
+		store.roomCount.add(message.data.clientId)
+	} else {
+		store.roomCount.delete(message.data.clientId)
+	}
+	broadcast<SSRoomCount>({
+		type: Channel.RoomCount,
 		data: {
 			count: store.roomCount.size,
 		},

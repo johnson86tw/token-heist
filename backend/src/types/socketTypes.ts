@@ -1,30 +1,35 @@
-export enum WebSocketChannel {
+export enum Channel {
 	LobbyCount = 'LobbyCount',
 	RoomCount = 'RoomCount',
 	Registering = 'Registering',
 	OpponentDisconnect = 'OpponentDisconnect',
+	OpponentConnected = 'OpponentConnected',
 }
 
-export type ServerReceivedMessage<T = {}> = {
-	route: WebSocketChannel
-	data: {
-		clientId: string
-	} & T
-}
-
-export type LobbyCountServerData = {
-	enter: boolean
-}
-
-export type ClientReceivedMessage<T = {}> = {
-	route: WebSocketChannel
+export type ClientSendMsg<T> = {
+	type: Channel
 	data: T
 }
 
-export type LobbyCountClientData = {
+export type CSLobbyCount = {
+	clientId: string
+	enter: boolean
+}
+
+export type CSRoomCount = {
+	clientId: string
+	enter: boolean
+}
+
+export type ServerSendMsg<T> = {
+	type: Channel
+	data: T
+}
+
+export type SSLobbyCount = {
 	count: number
 }
 
-export type RoomCountData = {
+export type SSRoomCount = {
 	count: number
 }
