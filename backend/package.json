@@ -2,7 +2,8 @@
 	"name": "@token-heist/backend",
 	"version": "0.0.0",
 	"scripts": {
-		"dev": "nodemon ./src/index.ts"
+		"dev": "nodemon ./src/index.ts",
+		"start": "ts-node ./src/index.ts"
 	},
 	"dependencies": {
 		"@token-heist/contracts": "workspace:^",

@@ -10,6 +10,7 @@
 	"license": "MIT",
 	"scripts": {
 		"dev": "pnpm -F app dev",
+		"start": "pnpm -F backend start",
 		"format": "prettier --write \"**/*.{vue,ts,js,json}\"",
 		"preinstall": "npx only-allow pnpm",
 		"prepare": "husky install"
