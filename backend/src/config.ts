@@ -1,14 +1,9 @@
-import dotenv from 'dotenv'
 import winston from 'winston'
+import dotenv from 'dotenv'
 
-// Application start datetime
-export const SERVER_START_TIME: Date = new Date()
-export const CLIENT_URL = process.env.CLIENT_URL ?? 'http://localhost:3000'
-
-// Configure dotenv package to read .env files
+// Configure to read .env files
 dotenv.config()
 
-// Create logger instance
 export const logger = winston.createLogger({
 	format: winston.format.combine(
 		winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
@@ -22,3 +17,18 @@ export const logger = winston.createLogger({
 		// new winston.transports.File({ filename: 'logs/combined.log' }),
 	],
 })
+
+export const CLIENT_URL = process.env.CLIENT_URL ?? 'http://localhost:3000'
+if (!CLIENT_URL) {
+	throw new Error('CLIENT_URL is not set in .env file')
+}
+
+export const PRIVATE_KEY = process.env.PRIVATE_KEY as string
+if (!PRIVATE_KEY) {
+	throw new Error('PRIVATE_KEY is not set in .env file')
+}
+
+export const SNEAK_VERIFIER_SEPOLIA = process.env.SNEAK_VERIFIER_SEPOLIA as string
+if (!SNEAK_VERIFIER_SEPOLIA) {
+	throw new Error('SNEAK_VERIFIER_SEPOLIA is not set in .env file')
+}

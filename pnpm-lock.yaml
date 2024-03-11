@@ -75,12 +75,18 @@ importers:
 
   backend:
     dependencies:
+      '@token-heist/contracts':
+        specifier: workspace:^
+        version: link:../contracts
       cors:
         specifier: ^2.8.5
         version: 2.8.5
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
+      ethers:
+        specifier: ^6.11.1
+        version: 6.11.1
       express:
         specifier: ^4.18.3
         version: 4.18.3
@@ -8600,6 +8606,7 @@ packages:
     engines: {node: '>=0.6'}
     dependencies:
       side-Channel: 1.0.5
+      side-channel: 1.0.6
     dev: false
 
   /qs@6.11.2:
@@ -8607,6 +8614,7 @@ packages:
     engines: {node: '>=0.6'}
     dependencies:
       side-Channel: 1.0.5
+      side-channel: 1.0.6
     dev: true
 
   /queue-microtask@1.2.3:
@@ -9118,6 +9126,15 @@ packages:
 
   /side-Channel@1.0.5:
     resolution: {integrity: sha512-QcgiIWV4WV7qWExbN5llt6frQB/lBven9pqliLXfGPB+K9ZYXxDozp0wLkHS24kWCm+6YXH/f0HhnObZnZOBnQ==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      call-bind: 1.0.7
+      es-errors: 1.3.0
+      get-intrinsic: 1.2.4
+      object-inspect: 1.13.1
+
+  /side-channel@1.0.6:
+    resolution: {integrity: sha512-fDW/EZ6Q9RiO8eFG8Hj+7u/oW+XrPTIChwCOM2+th2A6OblDtYYIpve9m+KvI9Z4C9qSEXlaGR6bTEYHReuglA==}
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.7
