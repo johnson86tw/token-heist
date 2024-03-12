@@ -18,7 +18,7 @@ export const logger = winston.createLogger({
 	],
 })
 
-export const CLIENT_URL = process.env.CLIENT_URL ?? 'http://localhost:3000'
+export const CLIENT_URL = process.env.CLIENT_URL
 if (!CLIENT_URL) {
 	throw new Error('CLIENT_URL is not set in .env file')
 }

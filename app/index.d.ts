@@ -3,7 +3,7 @@ declare module 'nuxt/schema' {
 	//   apiSecret: string
 	// }
 	interface PublicRuntimeConfig {
-		apiOrigin: string
+		backendOrigin: string
 	}
 }
 // It is always important to ensure you import/export something when augmenting a type

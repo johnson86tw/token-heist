@@ -5,7 +5,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 export default defineNuxtConfig({
 	runtimeConfig: {
 		public: {
-			apiOrigin: '35.221.231.129',
+			backendOrigin: 'token-heist.ddns.net',
 		},
 	},
 	devtools: { enabled: true },

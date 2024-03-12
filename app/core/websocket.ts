@@ -42,7 +42,7 @@ export function createWebSocket() {
 		}
 	} catch (error: any) {
 		error = error
-		console.error('Failed to connect to the ws server', error)
+		console.error('Failed to connect to the ws server:', error)
 		return
 	}
 }
