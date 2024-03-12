@@ -9,6 +9,7 @@
 	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
 	"license": "MIT",
 	"scripts": {
+		"build": "pnpm -F contracts build",
 		"dev": "pnpm -F app dev",
 		"start": "pnpm -F backend start",
 		"format": "prettier --write \"**/*.{vue,ts,js,json}\"",

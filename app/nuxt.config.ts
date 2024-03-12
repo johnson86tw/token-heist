@@ -3,6 +3,11 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+	runtimeConfig: {
+		public: {
+			apiOrigin: '35.221.231.129',
+		},
+	},
 	devtools: { enabled: true },
 	modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt'],
 	css: ['@/styles/main.scss'],

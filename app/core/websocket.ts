@@ -13,8 +13,13 @@ export function createWebSocket() {
 	clientId = uuidv4()
 
 	try {
-		// change to SERVER_URL
-		ws = new WebSocket('ws://localhost:8000')
+		const wsUrl = getWebsocketUrl()
+		console.log('Connecting to the websocket server:', wsUrl)
+
+		ws = new WebSocket(wsUrl)
+		if (!ws) {
+			throw new Error('Failed to create the WebSocket')
+		}
 
 		ws.onopen = () => {
 			console.log('Connected to the ws server')
