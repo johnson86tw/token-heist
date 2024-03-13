@@ -2,11 +2,6 @@
 import { ws, sendLobbyCount } from '~/core/websocket'
 import { Channel, type ServerSendMsg, type SSLobbyCount } from '@token-heist/backend/src/types/socketTypes'
 
-const { data } = await useFetch(getApiUrl(), {
-	server: true,
-})
-console.log(data.value)
-
 // ----------------------- feat: lobby online count -----------------------
 
 const lobbyCount = ref(0)

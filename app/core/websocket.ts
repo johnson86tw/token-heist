@@ -22,7 +22,7 @@ export function createWebSocket() {
 		}
 
 		ws.onopen = () => {
-			console.log('Connected to the ws server')
+			console.log('Websocket connected')
 
 			const route = useRoute()
 			switch (route.name) {
@@ -37,8 +37,8 @@ export function createWebSocket() {
 			}
 		}
 
-		ws.onclose = () => {
-			console.log('Disconnected from the server')
+		ws.onclose = (event: CloseEvent) => {
+			console.error('Websocket disconnected:', event.reason)
 		}
 	} catch (error: any) {
 		error = error

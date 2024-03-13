@@ -18,6 +18,8 @@ export function createWebSocketServer(server: http.Server, allowOrigin: string) 
 		const origin = req.headers.origin
 		if (origin !== allowOrigin) {
 			ws.close(1002, 'Invalid client URL')
+			logger.error(`Invalid client URL: ${origin}`)
+			return
 		}
 
 		// 什麼情況會發生 error 事件？
