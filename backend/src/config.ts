@@ -1,8 +1,22 @@
-import winston from 'winston'
+import winston, { transport } from 'winston'
 import dotenv from 'dotenv'
+import * as packageJson from '../package.json'
+
+const version = packageJson.version // get version from package.json
 
 // Configure to read .env files
 dotenv.config()
+
+const storeLogs = process.env.STORE_LOGS === 'true'
+
+const transports: transport[] = [new winston.transports.Console()]
+
+if (storeLogs) {
+	transports.push(
+		new winston.transports.File({ filename: `logs/error_v${version}.log`, level: 'error' }),
+		new winston.transports.File({ filename: `logs/all_v${version}.log` }),
+	)
+}
 
 export const logger = winston.createLogger({
 	format: winston.format.combine(
@@ -11,14 +25,10 @@ export const logger = winston.createLogger({
 			return `${info.timestamp} ${info.level}: ${info.message}`
 		}),
 	),
-	transports: [
-		new winston.transports.Console(),
-		// new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-		// new winston.transports.File({ filename: 'logs/combined.log' }),
-	],
+	transports: transports,
 })
 
-export const CLIENT_URL = process.env.CLIENT_URL
+export const CLIENT_URL = process.env.CLIENT_URL as string
 if (!CLIENT_URL) {
 	throw new Error('CLIENT_URL is not set in .env file')
 }

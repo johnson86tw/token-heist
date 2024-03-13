@@ -7,6 +7,9 @@ const POSEIDON_T6_ADDRESS = '0x666333F371685334CdD69bdDdaFBABc87CE7c7Db'
 
 export default (app: Express) => {
 	app.post('/deploy/:network', async (req, res) => {
+		res.status(400).json({ error: 'This route is temporarily blocked' })
+		return
+
 		const { network } = req.params
 
 		if (network !== 'sepolia') {
