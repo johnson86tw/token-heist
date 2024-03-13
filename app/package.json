@@ -1,6 +1,6 @@
 {
 	"name": "@token-heist/app",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "",
 	"repository": "https://github.com/chnejohnson/token-heist",
 	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@pinia/nuxt": "^0.5.1",
-		"@token-heist/backend": "^0.0.1",
+		"@token-heist/backend": "^0.0.2",
 		"@vueuse/core": "^10.9.0",
 		"@vueuse/nuxt": "^10.9.0",
 		"ethers": "^6.11.1",

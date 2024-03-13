@@ -1,6 +1,6 @@
 {
 	"name": "@token-heist/backend",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "",
 	"repository": "https://github.com/chnejohnson/token-heist",
 	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
@@ -10,7 +10,7 @@
 		"start": "ts-node ./src/index.ts"
 	},
 	"dependencies": {
-		"@token-heist/contracts": "^0.0.1",
+		"@token-heist/contracts": "^0.0.2",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",
 		"ethers": "^6.11.1",

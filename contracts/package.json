@@ -1,6 +1,6 @@
 {
 	"name": "@token-heist/contracts",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "",
 	"repository": "https://github.com/chnejohnson/token-heist",
 	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
@@ -11,7 +11,7 @@
 		"typechain": "hardhat typechain"
 	},
 	"dependencies": {
-		"@token-heist/circuits": "^0.0.1",
+		"@token-heist/circuits": "^0.0.2",
 		"circomlibjs": "^0.1.7",
 		"poseidon-solidity": "^0.0.5",
 		"snarkjs": "^0.7.3"
