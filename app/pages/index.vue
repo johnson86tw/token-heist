@@ -2,6 +2,14 @@
 import { ws, sendLobbyCount } from '~/core/websocket'
 import { Channel, type ServerSendMsg, type SSLobbyCount } from '@token-heist/backend/src/types/socketTypes'
 
+import { useMessage } from 'naive-ui'
+
+const message = useMessage()
+
+setTimeout(() => {
+	message.success('Hello, world!')
+}, 3000)
+
 // ----------------------- feat: lobby online count -----------------------
 
 const lobbyCount = ref(0)
@@ -36,7 +44,7 @@ if (process.client) {
 			<p>{{ lobbyCount }}</p>
 			<n-button>Deploy contracts</n-button>
 			<n-button>Copy Invite Link</n-button>
-			<n-button @click="navigateTo('/game/0x95222290dd7278aa3ddd389cc1e1d165cc4bafe5')"> Play </n-button>
+			<n-button @click="navigateTo('/game/0x202759E34e2B6D057E23F3d9d76220d08A3cCd46')"> Play </n-button>
 		</div>
 	</n-space>
 </template>

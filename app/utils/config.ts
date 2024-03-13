@@ -15,3 +15,6 @@ export function getApiUrl(): string {
 	}
 	return 'https://' + runtimeConfig.public.origin
 }
+
+export const RPC_URL = 'https://rpc.ankr.com/eth_sepolia'
+export const LS_PRIVATE_KEY = 'token-heist-private-key'
