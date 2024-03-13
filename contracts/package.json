@@ -1,6 +1,9 @@
 {
 	"name": "@token-heist/contracts",
-	"version": "0.0.0",
+	"version": "0.0.1",
+	"description": "",
+	"repository": "https://github.com/chnejohnson/token-heist",
+	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
 	"license": "MIT",
 	"scripts": {
 		"build": "hardhat compile && hardhat typechain",
@@ -8,7 +11,7 @@
 		"typechain": "hardhat typechain"
 	},
 	"dependencies": {
-		"@token-heist/circuits": "workspace:^",
+		"@token-heist/circuits": "^0.0.1",
 		"circomlibjs": "^0.1.7",
 		"poseidon-solidity": "^0.0.5",
 		"snarkjs": "^0.7.3"
@@ -26,5 +29,6 @@
 		"hardhat-gas-reporter": "^1.0.10",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.3.3"
-	}
+	},
+	"gitHead": "bd52591fee801da77ed3a805528a92ac48468598"
 }

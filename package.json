@@ -1,11 +1,8 @@
 {
 	"name": "token-heist",
+	"version": "0.0.0",
 	"description": "",
 	"repository": "https://github.com/chnejohnson/token-heist",
-	"bugs": {
-		"url": "https://github.com/chnejohnson/token-heist/issues"
-	},
-	"homepage": "https://github.com/chnejohnson/token-heist#readme",
 	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
 	"license": "MIT",
 	"scripts": {
@@ -13,11 +10,13 @@
 		"dev": "pnpm -F app dev",
 		"start": "pnpm -F backend start",
 		"format": "prettier --write \"**/*.{vue,ts,js,json}\"",
+		"version": "lerna version --no-private",
 		"preinstall": "npx only-allow pnpm",
 		"prepare": "husky install"
 	},
 	"devDependencies": {
 		"husky": "^9.0.11",
+		"lerna": "^8.1.2",
 		"lint-staged": "^15.2.2",
 		"prettier": "^3.2.5"
 	},

@@ -1,6 +1,10 @@
 {
 	"name": "@token-heist/app",
-	"private": true,
+	"version": "0.0.1",
+	"description": "",
+	"repository": "https://github.com/chnejohnson/token-heist",
+	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
+	"license": "MIT",
 	"type": "module",
 	"scripts": {
 		"build": "nuxt build",
@@ -11,7 +15,7 @@
 	},
 	"dependencies": {
 		"@pinia/nuxt": "^0.5.1",
-		"@token-heist/backend": "workspace:^",
+		"@token-heist/backend": "^0.0.1",
 		"@vueuse/core": "^10.9.0",
 		"@vueuse/nuxt": "^10.9.0",
 		"ethers": "^6.11.1",
@@ -29,5 +33,6 @@
 		"@types/uuid": "^9.0.8",
 		"sass": "^1.71.1",
 		"unplugin-vue-components": "^0.26.0"
-	}
+	},
+	"gitHead": "bd52591fee801da77ed3a805528a92ac48468598"
 }
