@@ -4,7 +4,10 @@ import { Channel, type ServerSendMsg, type SSRoomCount } from '@token-heist/back
 import { type TokenHeist, TokenHeist__factory } from '@token-heist/contracts/typechain-types'
 import { ethers, HDNodeWallet, Wallet } from 'ethers'
 import { useMessage } from 'naive-ui'
-import { LS_PRIVATE_KEY, RPC_URL } from '~/utils/config'
+import { LS_PRIVATE_KEY, RPC_URL, getApiUrl } from '~/config'
+import { genCalldata } from '~/utils/relay'
+import type { Provider } from 'ethers'
+import type { ContractEventPayload } from 'ethers'
 
 const route = useRoute()
 const address = route.params.address as string
@@ -18,6 +21,8 @@ const message = useMessage()
 const gameState = ref(0n)
 
 let tokenHeist: TokenHeist
+let provider: Provider
+let signer: Wallet
 
 if (process.client) {
 	if (!localStorage.getItem(LS_PRIVATE_KEY)) {
@@ -25,34 +30,66 @@ if (process.client) {
 		localStorage.setItem(LS_PRIVATE_KEY, hdNodeWallet.privateKey)
 	}
 	const privateKey = localStorage.getItem(LS_PRIVATE_KEY) as string
-	const provider = new ethers.JsonRpcProvider(RPC_URL)
-	const signer = new Wallet(privateKey, provider)
-	console.log(signer.address)
+	provider = new ethers.JsonRpcProvider(RPC_URL)
+	signer = new Wallet(privateKey, provider)
+	console.log('user', signer.address)
 	tokenHeist = TokenHeist__factory.connect(address, signer)
 
-	const gameState = await tokenHeist.gameState()
+	gameState.value = await tokenHeist.gameState()
+	const player1 = await tokenHeist.player1()
+	const player2 = await tokenHeist.player2()
+	console.log('player1', player1)
+	console.log('player2', player2)
 
 	// subscribe to events
-	tokenHeist.on(tokenHeist.getEvent('Registered'), (address: string) => {
-		console.log('Registered', address)
+	const RegisterEventSet = new Set<string>()
+	// @ts-ignore
+	tokenHeist.on('Registered', (address: string, event: ContractEventPayload) => {
+		const blockHash = event.log.blockHash
+		if (RegisterEventSet.has(blockHash)) return
+
 		message.info(`${address} Registered`)
+		RegisterEventSet.add(blockHash)
+	})
+
+	onUnmounted(() => {
+		tokenHeist.removeAllListeners()
 	})
 }
 
-const isRegistering = ref(false)
+// ----------------------- feat: register -----------------------
 
-async function onClickRegister() {
+const player1Registering = ref(false)
+const player2Registering = ref(false)
+
+async function register(n: number) {
+	const calldata = await genCalldata({
+		tokenHeistAddress: address,
+		provider: provider,
+		signer: signer,
+		data: tokenHeist.interface.encodeFunctionData('register', [n]),
+	})
+	await $fetch(getApiUrl() + '/relay', {
+		method: 'POST',
+		body: calldata,
+	})
+}
+
+async function onClickRegister(n: number) {
 	try {
-		isRegistering.value = true
-		const tx = await tokenHeist.register(2)
-		await tx.wait()
+		if (n === 1) player1Registering.value = true
+		if (n === 2) player2Registering.value = true
+		if (n !== 1 && n !== 2) throw new Error('Invalid player number')
+		await register(n)
 	} catch (err: any) {
 		message.error(err.message, {
 			closable: true,
 			duration: 10000,
 		})
+		console.error(err)
 	} finally {
-		isRegistering.value = false
+		if (n === 1) player1Registering.value = false
+		if (n === 2) player2Registering.value = false
 	}
 }
 
@@ -136,20 +173,17 @@ const ResetGame = () => {
 </script>
 
 <template>
-	<div>
+	<ClientOnly>
 		<div v-if="gameState === 0n">
 			<n-space justify="center" class="p-4 mt-52">
 				<div class="flex flex-col gap-2">
-					<n-button :loading="isRegistering" @click="onClickRegister">Register</n-button>
+					<n-button :loading="player1Registering" @click="onClickRegister(1)">Register Player 1</n-button>
+					<n-button :loading="player2Registering" @click="onClickRegister(2)">Register Player 2</n-button>
 				</div>
 			</n-space>
 		</div>
 
 		<div v-if="gameState === 1n" class="pt-8 text-center">
-			<NuxtLink to="/">
-				<h1 class="mb-8 text-3xl font-bold uppercase">Token Heist</h1>
-			</NuxtLink>
-
 			<p>{{ roomCount }}</p>
 
 			<h3 class="text-xl mb-4">Player {{ player }}'s turn</h3>
@@ -177,7 +211,5 @@ const ResetGame = () => {
 				</button>
 			</div>
 		</div>
-	</div>
+	</ClientOnly>
 </template>
-
-<style></style>

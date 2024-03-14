@@ -7,8 +7,8 @@ pnpm hardhat node
 pnpm hardhat run scripts/deploy.ts --network localhost
 pnpm hardhat run scripts/verifyProof.ts --network localhost
 
-pnpm hardhat run scripts/deploy.ts --network sepolia
-pnpm hardhat run scripts/verifyProof.ts --network sepolia
+pnpm hardhat run scripts/deploy.ts --network arbitrum-sepolia
+pnpm hardhat run scripts/verifyProof.ts --network arbitrum-sepolia
 ```
 
 ## Develop

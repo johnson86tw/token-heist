@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ws, sendLobbyCount } from '~/core/websocket'
 import { Channel, type ServerSendMsg, type SSLobbyCount } from '@token-heist/backend/src/types/socketTypes'
+import Deployment from '@token-heist/contracts/deployment/arbitrum-sepolia.json'
 
 import { useMessage } from 'naive-ui'
 
 const message = useMessage()
-
-setTimeout(() => {
-	message.success('Hello, world!')
-}, 3000)
 
 // ----------------------- feat: lobby online count -----------------------
 
@@ -36,6 +33,10 @@ if (process.client) {
 		sendLobbyCount(false)
 	})
 }
+
+function onClickPlay() {
+	navigateTo(`/game/${Deployment.tokenHeist}`)
+}
 </script>
 
 <template>
@@ -44,7 +45,7 @@ if (process.client) {
 			<p>{{ lobbyCount }}</p>
 			<n-button>Deploy contracts</n-button>
 			<n-button>Copy Invite Link</n-button>
-			<n-button @click="navigateTo('/game/0x202759E34e2B6D057E23F3d9d76220d08A3cCd46')"> Play </n-button>
+			<n-button @click="onClickPlay"> Play </n-button>
 		</div>
 	</n-space>
 </template>

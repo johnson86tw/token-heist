@@ -16,5 +16,6 @@ export function getApiUrl(): string {
 	return 'https://' + runtimeConfig.public.origin
 }
 
-export const RPC_URL = 'https://rpc.ankr.com/eth_sepolia'
+export const RPC_URL = 'https://sepolia-rollup.arbitrum.io/rpc'
 export const LS_PRIVATE_KEY = 'token-heist-private-key'
+export const LS_CLIENT_ID = 'token-heist-client-id'

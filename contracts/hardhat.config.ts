@@ -31,6 +31,10 @@ const config: HardhatUserConfig = {
 			accounts,
 			gasPrice: 3000000000, // deploy TokenHeist 時避免產生 ProviderError: INTERNAL_ERROR: could not replace existing tx
 		},
+		'arbitrum-sepolia': {
+			url: 'https://sepolia-rollup.arbitrum.io/rpc',
+			accounts,
+		},
 	},
 }
 

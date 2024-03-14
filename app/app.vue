@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { darkTheme, NConfigProvider, type GlobalThemeOverrides } from 'naive-ui'
 import { createWebSocket } from './core/websocket'
+import { getApiUrl } from './config'
 
 const themeOverrides: GlobalThemeOverrides = {
 	common: {

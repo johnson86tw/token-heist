@@ -1,5 +1,5 @@
 import { ethers, network } from 'hardhat'
-import { SneakVerifier__factory, TokenHeist__factory } from '../typechain-types'
+import { ERC2771Forwarder__factory, SneakVerifier__factory, TokenHeist__factory } from '../typechain-types'
 import fs from 'fs'
 import path from 'path'
 
@@ -13,6 +13,12 @@ async function main() {
 	const verifierAddr = await verifier.getAddress()
 	console.log('SneakVerifier deployed to:', verifierAddr)
 
+	// deploy ERC2771Forwarder
+	const forwarder = await new ERC2771Forwarder__factory(deployer).deploy('Token Heist')
+	const forwarderAddr = await forwarder.getAddress()
+	console.log('ERC2771Forwarder deployed to:', forwarderAddr)
+
+	// deploy TokenHeist
 	const prizeMap = [1, 2, 1, 2, 3, 4, 3, 5, 4]
 	const timeLimitPerTurn = 180 // 3 minutes
 	const timeUpPoints = 20
@@ -22,7 +28,7 @@ async function main() {
 			'poseidon-solidity/PoseidonT6.sol:PoseidonT6': PoseidonT6Address,
 		},
 		deployer,
-	).deploy(verifierAddr, prizeMap, timeLimitPerTurn, timeUpPoints)
+	).deploy(verifierAddr, forwarderAddr, prizeMap, timeLimitPerTurn, timeUpPoints)
 
 	const tokenHesitAddr = await tokenHeist.getAddress()
 	console.log('TokenHeist deployed to:', tokenHesitAddr)
@@ -30,6 +36,7 @@ async function main() {
 	const addresses = {
 		poseidonT6: PoseidonT6Address,
 		sneakVerifier: verifierAddr,
+		forwarder: forwarderAddr,
 		tokenHeist: tokenHesitAddr,
 	}
 
