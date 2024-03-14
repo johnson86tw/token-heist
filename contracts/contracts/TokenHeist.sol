@@ -130,12 +130,12 @@ contract TokenHeist is ERC2771Context {
     }
 
     function cancelRegistration() public gameNotStarted onlyPlayer {
-        if (msg.sender == player1) {
+        if (_msgSender() == player1) {
             player1 = address(0);
-        } else if (msg.sender == player2) {
+        } else if (_msgSender() == player2) {
             player2 = address(0);
         }
-        emit CancelledRegistration(msg.sender);
+        emit CancelledRegistration(_msgSender());
     }
 
     function heist(uint256 score) private {
@@ -169,12 +169,12 @@ contract TokenHeist is ERC2771Context {
     }
 
     function timeUp() public gameInProgress onlyPlayer returns (bool) {
-        if (currentRole == Role.Thief && thiefTime < block.timestamp && msg.sender == roles[Role.Police]) {
+        if (currentRole == Role.Thief && thiefTime < block.timestamp && _msgSender() == roles[Role.Police]) {
             // police wins
             heist(0);
             emit TimeUp(gameState, Role.Thief, roles[Role.Thief]);
             return true;
-        } else if (currentRole == Role.Police && policeTime < block.timestamp && msg.sender == roles[Role.Thief]) {
+        } else if (currentRole == Role.Police && policeTime < block.timestamp && _msgSender() == roles[Role.Thief]) {
             // thief wins
             heist(timeUpPoints);
             emit TimeUp(gameState, Role.Police, roles[Role.Police]);
@@ -369,17 +369,17 @@ contract TokenHeist is ERC2771Context {
     // ================================ Modifiers ================================
 
     modifier onlyThief() {
-        require(msg.sender == roles[Role.Thief], "Only player1 can call this function");
+        require(_msgSender() == roles[Role.Thief], "Only player1 can call this function");
         _;
     }
 
     modifier onlyPolice() {
-        require(msg.sender == roles[Role.Police], "Only player2 can call this function");
+        require(_msgSender() == roles[Role.Police], "Only player2 can call this function");
         _;
     }
 
     modifier onlyPlayer() {
-        require(msg.sender == player1 || msg.sender == player2, "Only players can call this function");
+        require(_msgSender() == player1 || _msgSender() == player2, "Only players can call this function");
         _;
     }
 
