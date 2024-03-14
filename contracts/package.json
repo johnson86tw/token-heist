@@ -11,6 +11,7 @@
 		"typechain": "hardhat typechain"
 	},
 	"dependencies": {
+		"@openzeppelin/contracts": "^5.0.2",
 		"@token-heist/circuits": "^0.0.2",
 		"circomlibjs": "^0.1.7",
 		"poseidon-solidity": "^0.0.5",

@@ -1,7 +1,10 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import "poseidon-solidity/PoseidonT6.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
+
 // import "hardhat/console.sol";
 
 interface IVerifier {
@@ -13,7 +16,7 @@ interface IVerifier {
     ) external view returns (bool);
 }
 
-contract TokenHeist {
+contract TokenHeist is ERC2771Context {
     uint8 public constant MAX_COPS = 5;
 
     enum Role {
@@ -42,10 +45,11 @@ contract TokenHeist {
 
     constructor(
         IVerifier _sneakVerifier,
+        ERC2771Forwarder _forwarder,
         uint256[9] memory _prizeMap,
         uint256 _timeLimitPerTurn,
         uint256 _timeUpPoints
-    ) {
+    ) ERC2771Context(address(_forwarder)) {
         sneakVerifier = _sneakVerifier;
         prizeMap = _prizeMap;
         timeLimitPerTurn = _timeLimitPerTurn;
@@ -105,15 +109,15 @@ contract TokenHeist {
             if (player1 != address(0)) {
                 revert HasRegistered(Role.Thief);
             }
-            player1 = msg.sender;
+            player1 = _msgSender();
         } else if (n == 2) {
             if (player2 != address(0)) {
                 revert HasRegistered(Role.Police);
             }
-            player2 = msg.sender;
+            player2 = _msgSender();
         }
 
-        emit Registered(msg.sender);
+        emit Registered(_msgSender());
 
         if (player1 != address(0) && player2 != address(0)) {
             gameState = GameState.RoundOneInProgress;

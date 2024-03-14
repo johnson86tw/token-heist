@@ -1,5 +1,5 @@
 import { ethers } from 'hardhat'
-import { TokenHeist__factory } from '../typechain-types'
+import { ERC2771Forwarder__factory, TokenHeist__factory } from '../typechain-types'
 
 import { PoseidonT6 } from 'poseidon-solidity'
 
@@ -36,6 +36,10 @@ export async function deployFixture() {
 		console.error('Failed to deploy PoseidonT6:', err)
 	}
 
+	// deploy ERC2771Forwarder
+	const forwarder = await new ERC2771Forwarder__factory(owner).deploy('Token Heist')
+	const forwarderAddr = await forwarder.getAddress()
+
 	// deploy TokenHeist
 	const tokenHeistFactory = new TokenHeist__factory(
 		{
@@ -48,17 +52,26 @@ export async function deployFixture() {
 	const timeLimitPerTurn = 180 // 3 minutes
 	const timeUpPoints = 20
 
-	const tokenHeist = await tokenHeistFactory.deploy(verifierAddr, prizeMap, timeLimitPerTurn, timeUpPoints)
+	const tokenHeist = await tokenHeistFactory.deploy(
+		verifierAddr,
+		forwarderAddr,
+		prizeMap,
+		timeLimitPerTurn,
+		timeUpPoints,
+	)
 	const tokenHesitAddr = await tokenHeist.getAddress()
 	const tokenHeistPlayer1 = tokenHeist.connect(player1)
 	const tokenHeistPlayer2 = tokenHeist.connect(player2)
 
 	return {
+		provider: owner.provider,
 		owner,
 		player1,
 		player2,
 		verifier,
 		verifierAddr,
+		forwarder,
+		forwarderAddr,
 		tokenHeist,
 		tokenHesitAddr,
 		tokenHeistPlayer1,
