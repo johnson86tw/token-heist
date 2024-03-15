@@ -31,6 +31,9 @@ export enum GameState {
 }
 
 export type PrizeMap = [number, number, number, number, number, number, number, number, number] | number[]
-export type Ambushes = [number, number, number, number, number] | number[]
+export type Ambushes =
+	| number[][]
+	| [[number, number], [number, number], [number, number], [number, number], [number, number]]
 export type CopUsedCount = number
 export type Countdown = Dayjs
+export type Noticed = boolean

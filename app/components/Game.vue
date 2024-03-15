@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Ambushes, CopUsedCount, Countdown, GameState, Player, PrizeMap, Role } from '~/types'
+import type { Ambushes, CopUsedCount, Countdown, GameState, Noticed, Player, PrizeMap, Role } from '~/types'
 
 const props = withDefaults(
 	defineProps<{
@@ -11,6 +11,7 @@ const props = withDefaults(
 		prizeMap: PrizeMap
 		countdown: Countdown
 		winner: Player
+		noticed: Noticed
 	}>(),
 	{},
 )
@@ -36,77 +37,100 @@ const subtitle = computed(() => {
 	}
 })
 
-// ----------------------- feat: tic-tac-toe -----------------------
+const description = computed(() => {
+	if (props.noticed) return 'The previous cop found the thief nearby, but they may have already left!'
+	return ''
+})
 
-const player = ref('X')
-const board = ref([
-	['', '', ''],
-	['', '', ''],
-	['', '', ''],
-])
+function to3x3Array(arr: number[]) {
+	const res = []
+	for (let i = 0; i < 3; i++) {
+		res.push(arr.slice(i * 3, i * 3 + 3))
+	}
+	return res
+}
 
-const CalculateWinner = board => {
-	const lines = [
-		[0, 1, 2],
-		[3, 4, 5],
-		[6, 7, 8],
-		[0, 3, 6],
-		[1, 4, 7],
-		[2, 5, 8],
-		[0, 4, 8],
-		[2, 4, 6],
+const board = ref(to3x3Array(props.prizeMap))
+
+const thiefPos = ref([-1, -1])
+
+function isRedCells(x: number, y: number) {
+	if (!props.noticed) return false
+
+	let lastAmbush
+	for (let i = 4; i >= 0; i--) {
+		if (props.ambushes[i][0] !== -1 && props.ambushes[i][1] !== -1) {
+			lastAmbush = props.ambushes[i]
+			break
+		}
+	}
+	if (!lastAmbush) return []
+
+	// find the adjacent cells of the lastAmbush
+	const cells = []
+	const adjacents = [
+		[1, 0],
+		[0, 1],
+		[-1, 0],
+		[0, -1],
 	]
-
-	for (let i = 0; i < lines.length; i++) {
-		const [a, b, c] = lines[i]
-
-		if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-			return board[a]
+	for (let i = 0; i < 4; i++) {
+		const x = lastAmbush[0] + adjacents[i][0]
+		const y = lastAmbush[1] + adjacents[i][1]
+		if (x >= 0 && x < 3 && y >= 0 && y < 3) {
+			cells.push([x, y])
 		}
 	}
 
-	return null
+	return cells.some(cell => {
+		if (props.ambushes.some(ambush => ambush[0] === cell[0] && ambush[1] === cell[1])) {
+			return false
+		}
+		return cell[0] === x && cell[1] === y
+	})
 }
 
-const winner = computed(() => CalculateWinner(board.value.flat()))
-
-const MakeMove = (x, y) => {
-	if (winner.value) return
-
-	if (board.value[x][y]) return
-
-	board.value[x][y] = player.value
-
-	player.value = player.value === 'X' ? 'O' : 'X'
-}
-
-const ResetGame = () => {
-	board.value = [
-		['', '', ''],
-		['', '', ''],
-		['', '', ''],
-	]
-	player.value = 'X'
-}
+// 'text-pink-500' : 'text-blue-400'
 </script>
 
 <template>
 	<ClientOnly>
 		<div v-if="gameState === 1 || gameState === 2" class="game">
-			<p class="title">{{ title }}</p>
-			<p class="subtitle">{{ subtitle }}</p>
+			<div class="h-32">
+				<p class="title">{{ title }}</p>
+				<p class="subtitle">{{ subtitle }}</p>
+				<p class="description">{{ description }}</p>
+			</div>
 
 			<div class="flex flex-col items-center mb-8">
-				<div v-for="(row, x) in board" :key="x" class="flex">
+				<div v-for="(row, y) in board" :key="y" class="flex">
 					<div
-						v-for="(cell, y) in row"
-						:key="y"
-						@click="MakeMove(x, y)"
-						:class="`border border-white w-24 h-24 hover:bg-gray-700 flex items-center justify-center material-icons-outlined text-4xl cursor-pointer ${cell === 'X' ? 'text-pink-500' : 'text-blue-400'}`"
+						v-for="(prize, x) in row"
+						:key="x"
+						class="relative border border-white w-24 h-24 hover:bg-gray-700 flex items-center justify-center material-icons-outlined text-4xl cursor-pointer"
+						:class="isRedCells(x, y) ? 'bg-red-600 bg-opacity-40' : ''"
 					>
-						{{ cell === 'X' ? 'close' : cell === 'O' ? 'circle' : '' }}
+						<!-- prize map -->
+						<p>{{ board[y][x] }}</p>
+
+						<!-- thief -->
+						<div v-if="x === thiefPos[0] && y === thiefPos[1]" class="absolute opacity-60">
+							<Thief />
+						</div>
+
+						<!-- police -->
+						<div v-for="(ambush, i) in ambushes" :key="i" class="absolute">
+							<div v-if="x === ambush[0] && y === ambush[1]">
+								<Cop />
+							</div>
+						</div>
 					</div>
 				</div>
+			</div>
+
+			<div>
+				<Thief />
+				<Cop />
 			</div>
 		</div>
 
@@ -128,5 +152,9 @@ const ResetGame = () => {
 
 .subtitle {
 	@apply text-lg mb-4;
+}
+
+.description {
+	@apply text-base mb-4;
 }
 </style>

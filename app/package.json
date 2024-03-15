@@ -14,6 +14,7 @@
 		"postinstall": "nuxt prepare"
 	},
 	"dependencies": {
+		"@nuxt/image": "^1.4.0",
 		"@pinia/nuxt": "^0.5.1",
 		"@token-heist/backend": "*",
 		"@token-heist/contracts": "*",
