@@ -9,7 +9,7 @@ export default defineNuxtConfig({
 		},
 	},
 	devtools: { enabled: true },
-	modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt', '@nuxt/test-utils/module', '@nuxt/image'],
+	modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt', '@nuxt/test-utils/module'],
 	css: ['@/styles/main.scss'],
 
 	// naive-ui: https://www.naiveui.com/en-US/os-theme/docs/ssr
