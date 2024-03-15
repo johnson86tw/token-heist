@@ -43,6 +43,7 @@ function onClickPlay() {
 <template>
 	<n-space justify="center" class="p-4">
 		<div class="flex flex-col gap-2">
+			<n-gradient-text type="info"> Token Heist </n-gradient-text>
 			<p>{{ lobbyCount }}</p>
 			<n-button>Deploy contracts</n-button>
 			<n-button>Copy Invite Link</n-button>

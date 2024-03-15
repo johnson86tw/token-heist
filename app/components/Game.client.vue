@@ -19,9 +19,11 @@ const props = withDefaults(
 const isSpectator = computed(() => props.role === 0)
 const isThief = computed(() => props.role === 1)
 const isPolice = computed(() => props.role === 2)
+const isPlayer = computed(() => props.role !== 0)
 const isMyTurn = computed(() => props.currentRole === props.role)
 const isThiefTurn = computed(() => isThief.value && isMyTurn.value)
 const isPoliceTurn = computed(() => isPolice.value && isMyTurn.value)
+const isFirstMove = computed(() => props.copUsedCount === 0)
 
 const title = computed(() => {
 	switch (props.gameState) {
@@ -56,10 +58,6 @@ function to3x3Array(arr: number[]) {
 	}
 	return res
 }
-
-const board = ref(to3x3Array(props.prizeMap))
-
-const thiefPos = ref([-1, -1])
 
 function isRedCells(x: number, y: number) {
 	if (!props.noticed) return false
@@ -97,22 +95,8 @@ function isRedCells(x: number, y: number) {
 	})
 }
 
-const thiefRefs = ref()
-
-async function makeMove(x: number, y: number) {
-	thiefPos.value = [x, y]
-	// await nextTick()
-	// console.log(thiefRefs.value)
-
-	// const { $anime } = useNuxtApp()
-	// $anime({
-	// 	targets: thiefRefs.value[0],
-	// 	translateY: 180,
-	// 	direction: 'reverse',
-	// })
-}
-
 function isClickableCell(x: number, y: number) {
+	if (!isPlayer.value) return false
 	if (isThiefTurn.value) {
 		if (props.ambushes.some(ambush => ambush[0] === x && ambush[1] === y)) {
 			return false
@@ -122,27 +106,86 @@ function isClickableCell(x: number, y: number) {
 	return false
 }
 
+const currentCopCount = computed(() => {
+	if (isMoved.value) {
+		return props.copUsedCount - 1
+	}
+	return props.copUsedCount
+})
+
+function isSelectedCell(x: number, y: number) {
+	return placement.value[0] === x && placement.value[1] === y
+}
+
+const board = ref(to3x3Array(props.prizeMap))
+
+const placementRef = ref()
+const placement = ref([-1, -1])
+const isMoved = ref(false)
+
+async function makeMove(x: number, y: number) {
+	if (!isPlayer.value) return
+	// Return back if selected cell is the same as the current placement
+	if (placement.value[0] === x && placement.value[1] === y) {
+		placement.value = [-1, -1]
+		isMoved.value = false
+		return
+	}
+	// Cannot make move if there's already a cop there
+	if (props.ambushes.some(ambush => ambush[0] === x && ambush[1] === y)) return
+	placement.value = [x, y]
+	isMoved.value = true
+
+	// await nextTick()
+	// console.log(placementRef.value)
+
+	// const { $anime } = useNuxtApp()
+	// $anime({
+	// 	targets: placementRef.value[0],
+	// 	translateY: 180,
+	// 	direction: 'reverse',
+	// })
+}
+
 // 'text-pink-500' : 'text-blue-400'
+
+const showBottomBtn = ref(false)
+const bottomBtnText = computed(() => {
+	if (isThiefTurn.value) return 'Sneak'
+	if (isPoliceTurn.value) return 'Dispatch'
+	return ''
+})
+
+watch(isMoved, () => {
+	if (isMoved.value) {
+		showBottomBtn.value = true
+	} else {
+		showBottomBtn.value = false
+	}
+})
 </script>
 
 <template>
 	<div>
+		<!-- Game in progress -->
 		<div v-if="gameState === 1 || gameState === 2" class="game-state">
-			<div class="h-32">
+			<div class="h-20">
 				<p class="title">{{ title }}</p>
 				<p class="subtitle">{{ subtitle }}</p>
-				<p class="description">{{ description }}</p>
+				<!-- <p class="description">{{ description }}</p> -->
 			</div>
 
-			<div class="flex flex-col items-center mb-8">
+			<!-- Board -->
+			<div class="flex flex-col items-center">
 				<div v-for="(row, y) in board" :key="y" class="flex">
 					<div
 						v-for="(prize, x) in row"
 						:key="x"
-						class="relative border border-white w-24 h-24 flex items-center justify-center material-icons-outlined text-4xl"
+						class="relative border border-white w-20 h-20 flex items-center justify-center text-4xl"
 						:class="{
 							'bg-red-600 bg-opacity-40': isRedCells(x, y),
-							'hover:bg-gray-700 cursor-pointer': isClickableCell(x, y),
+							'cursor-pointer': isClickableCell(x, y),
+							'bg-gray-400 bg-opacity-40': isSelectedCell(x, y) && isPoliceTurn,
 						}"
 						@click="makeMove(x, y)"
 					>
@@ -150,11 +193,12 @@ function isClickableCell(x: number, y: number) {
 						<p>{{ board[y][x] }}</p>
 
 						<!-- thief -->
-						<div ref="thiefRefs" v-if="x === thiefPos[0] && y === thiefPos[1]" class="absolute opacity-60">
-							<Thief />
+						<div ref="placementRef" v-if="isSelectedCell(x, y)" class="absolute">
+							<Thief v-if="isThiefTurn" class="opacity-60" />
+							<Cop v-if="isPoliceTurn" />
 						</div>
 
-						<!-- police -->
+						<!-- ambushed cops -->
 						<div v-for="(ambush, i) in ambushes" :key="i" class="absolute">
 							<div v-if="x === ambush[0] && y === ambush[1]">
 								<Cop />
@@ -164,11 +208,31 @@ function isClickableCell(x: number, y: number) {
 				</div>
 			</div>
 
-			<div v-if="isPolice">
-				<Cop />
+			<!-- block below board -->
+			<div class="flex flex-col items-center mt-10">
+				<div v-if="isThiefTurn && isFirstMove && !isMoved">
+					<Thief />
+				</div>
+				<div v-if="isPoliceTurn" class="flex">
+					<Cop v-for="(_, i) in currentCopCount" :key="i" />
+				</div>
 			</div>
+
+			<!-- Bottom button -->
+			<n-drawer
+				:show-mask="false"
+				:mask-closable="false"
+				v-model:show="showBottomBtn"
+				:height="55"
+				placement="bottom"
+			>
+				<n-button class="bottom-btn">
+					{{ bottomBtnText }}
+				</n-button>
+			</n-drawer>
 		</div>
 
+		<!-- Game over -->
 		<div v-if="gameState === 3" class="game-state">
 			<p class="title">{{ title }}</p>
 			<p class="subtitle">{{ subtitle }}</p>
@@ -191,5 +255,9 @@ function isClickableCell(x: number, y: number) {
 
 .description {
 	@apply text-base mb-4;
+}
+
+.bottom-btn {
+	@apply w-full h-full flex justify-center items-center text-xl uppercase bg-teal-800 hover:bg-teal-900 cursor-pointer;
 }
 </style>

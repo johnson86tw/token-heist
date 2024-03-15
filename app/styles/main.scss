@@ -1,3 +1,12 @@
+/**
+ * @feat Fixing the address bar in mobile browsers
+ * https://ishwar-rimal.medium.com/fixing-that-address-bar-issue-in-mobile-browsers-once-and-for-all-8c283fc88e56
+ */
+html {
+	overflow: hidden;
+	width: 100%;
+}
+
 body {
 	@apply bg-gray-800 text-gray-300;
 }
