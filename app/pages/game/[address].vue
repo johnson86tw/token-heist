@@ -18,7 +18,7 @@ const message = useMessage()
 
 // ----------------------- feat: contract -----------------------
 
-const gameState = ref(0n)
+const gameState = ref(0)
 
 let tokenHeist: TokenHeist
 let provider: Provider
@@ -35,7 +35,7 @@ if (process.client) {
 	console.log('user', signer.address)
 	tokenHeist = TokenHeist__factory.connect(address, signer)
 
-	gameState.value = await tokenHeist.gameState()
+	gameState.value = Number(await tokenHeist.gameState())
 	const player1 = await tokenHeist.player1()
 	const player2 = await tokenHeist.player2()
 	console.log('player1', player1)
@@ -121,7 +121,7 @@ if (process.client) {
 
 <template>
 	<ClientOnly>
-		<div v-if="gameState === 0n">
+		<div v-if="gameState === 0">
 			<n-space justify="center" class="p-4 mt-52">
 				<div class="flex flex-col gap-2">
 					<n-button :loading="player1Registering" @click="onClickRegister(1)">Register Player 1</n-button>
