@@ -5,13 +5,16 @@ import {
 	type CSLobbyCount,
 	type CSRoomCount,
 } from '@token-heist/backend/src/types/socketTypes'
-import { getWebsocketUrl } from '../config'
+import { getWebsocketUrl, LS_CLIENT_ID } from '../config'
 
 export let ws: WebSocket
 export let clientId: string
 
 export function createWebSocket() {
-	clientId = localStorage.getItem('token-heist-client-id') || uuidv4()
+	if (!localStorage.getItem(LS_CLIENT_ID)) {
+		localStorage.setItem(LS_CLIENT_ID, uuidv4())
+	}
+	clientId = localStorage.getItem(LS_CLIENT_ID) as string
 
 	try {
 		const wsUrl = getWebsocketUrl()
