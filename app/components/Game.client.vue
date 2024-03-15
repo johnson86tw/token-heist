@@ -59,7 +59,7 @@ function to3x3Array(arr: number[]) {
 
 const board = ref(to3x3Array(props.prizeMap))
 
-const thiefPos = ref([1, 0])
+const thiefPos = ref([-1, -1])
 
 function isRedCells(x: number, y: number) {
 	if (!props.noticed) return false
@@ -97,20 +97,29 @@ function isRedCells(x: number, y: number) {
 	})
 }
 
-const thiefRef = ref(null)
+const thiefRefs = ref()
 
-onMounted(() => {
-	console.log(thiefRef.value)
+async function makeMove(x: number, y: number) {
+	thiefPos.value = [x, y]
+	// await nextTick()
+	// console.log(thiefRefs.value)
 
 	// const { $anime } = useNuxtApp()
 	// $anime({
-	// 	targets: foo.value,
-	// 	translateY: 250,
+	// 	targets: thiefRefs.value[0],
+	// 	translateY: 180,
+	// 	direction: 'reverse',
 	// })
-})
+}
 
-function showRef() {
-	console.log(thiefRef.value)
+function isClickableCell(x: number, y: number) {
+	if (isThiefTurn.value) {
+		if (props.ambushes.some(ambush => ambush[0] === x && ambush[1] === y)) {
+			return false
+		}
+		return true
+	}
+	return false
 }
 
 // 'text-pink-500' : 'text-blue-400'
@@ -118,9 +127,6 @@ function showRef() {
 
 <template>
 	<div>
-		<n-button @click="showRef">Button</n-button>
-		<div ref="thiefRef">Thief</div>
-
 		<div v-if="gameState === 1 || gameState === 2" class="game-state">
 			<div class="h-32">
 				<p class="title">{{ title }}</p>
@@ -133,14 +139,18 @@ function showRef() {
 					<div
 						v-for="(prize, x) in row"
 						:key="x"
-						class="relative border border-white w-24 h-24 hover:bg-gray-700 flex items-center justify-center material-icons-outlined text-4xl cursor-pointer"
-						:class="isRedCells(x, y) ? 'bg-red-600 bg-opacity-40' : ''"
+						class="relative border border-white w-24 h-24 flex items-center justify-center material-icons-outlined text-4xl"
+						:class="{
+							'bg-red-600 bg-opacity-40': isRedCells(x, y),
+							'hover:bg-gray-700 cursor-pointer': isClickableCell(x, y),
+						}"
+						@click="makeMove(x, y)"
 					>
 						<!-- prize map -->
 						<p>{{ board[y][x] }}</p>
 
 						<!-- thief -->
-						<div v-show="x === thiefPos[0] && y === thiefPos[1]" class="absolute opacity-60">
+						<div ref="thiefRefs" v-if="x === thiefPos[0] && y === thiefPos[1]" class="absolute opacity-60">
 							<Thief />
 						</div>
 
