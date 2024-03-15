@@ -1,4 +1,4 @@
-import * as dotenv from 'dotenv'
+import dotenv from 'dotenv'
 import { HardhatUserConfig } from 'hardhat/config'
 import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-toolbox'
@@ -30,6 +30,10 @@ const config: HardhatUserConfig = {
 			url: 'https://rpc.ankr.com/eth_sepolia',
 			accounts,
 			gasPrice: 3000000000, // deploy TokenHeist 時避免產生 ProviderError: INTERNAL_ERROR: could not replace existing tx
+		},
+		'arbitrum-sepolia': {
+			url: 'https://sepolia-rollup.arbitrum.io/rpc',
+			accounts,
 		},
 	},
 }

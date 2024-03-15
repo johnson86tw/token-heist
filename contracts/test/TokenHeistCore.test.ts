@@ -67,6 +67,7 @@ describe('TokenHeist Core Functions', function () {
 			).to.be.revertedWithCustomError(tokenHeistPlayer1, 'InvalidAmbushes')
 		})
 	})
+	describe('#register', function () {})
 	describe('#dispatch', function () {})
 	describe('#reveal', function () {
 		// feat: the path that has been walked cannot be calculated repeatedly

@@ -1,7 +1,10 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
 import "poseidon-solidity/PoseidonT6.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
+
 // import "hardhat/console.sol";
 
 interface IVerifier {
@@ -13,7 +16,7 @@ interface IVerifier {
     ) external view returns (bool);
 }
 
-contract TokenHeist {
+contract TokenHeist is ERC2771Context {
     uint8 public constant MAX_COPS = 5;
 
     enum Role {
@@ -42,10 +45,11 @@ contract TokenHeist {
 
     constructor(
         IVerifier _sneakVerifier,
+        ERC2771Forwarder _forwarder,
         uint256[9] memory _prizeMap,
         uint256 _timeLimitPerTurn,
         uint256 _timeUpPoints
-    ) {
+    ) ERC2771Context(address(_forwarder)) {
         sneakVerifier = _sneakVerifier;
         prizeMap = _prizeMap;
         timeLimitPerTurn = _timeLimitPerTurn;
@@ -105,15 +109,15 @@ contract TokenHeist {
             if (player1 != address(0)) {
                 revert HasRegistered(Role.Thief);
             }
-            player1 = msg.sender;
+            player1 = _msgSender();
         } else if (n == 2) {
             if (player2 != address(0)) {
                 revert HasRegistered(Role.Police);
             }
-            player2 = msg.sender;
+            player2 = _msgSender();
         }
 
-        emit Registered(msg.sender);
+        emit Registered(_msgSender());
 
         if (player1 != address(0) && player2 != address(0)) {
             gameState = GameState.RoundOneInProgress;
@@ -126,12 +130,12 @@ contract TokenHeist {
     }
 
     function cancelRegistration() public gameNotStarted onlyPlayer {
-        if (msg.sender == player1) {
+        if (_msgSender() == player1) {
             player1 = address(0);
-        } else if (msg.sender == player2) {
+        } else if (_msgSender() == player2) {
             player2 = address(0);
         }
-        emit CancelledRegistration(msg.sender);
+        emit CancelledRegistration(_msgSender());
     }
 
     function heist(uint256 score) private {
@@ -165,12 +169,12 @@ contract TokenHeist {
     }
 
     function timeUp() public gameInProgress onlyPlayer returns (bool) {
-        if (currentRole == Role.Thief && thiefTime < block.timestamp && msg.sender == roles[Role.Police]) {
+        if (currentRole == Role.Thief && thiefTime < block.timestamp && _msgSender() == roles[Role.Police]) {
             // police wins
             heist(0);
             emit TimeUp(gameState, Role.Thief, roles[Role.Thief]);
             return true;
-        } else if (currentRole == Role.Police && policeTime < block.timestamp && msg.sender == roles[Role.Thief]) {
+        } else if (currentRole == Role.Police && policeTime < block.timestamp && _msgSender() == roles[Role.Thief]) {
             // thief wins
             heist(timeUpPoints);
             emit TimeUp(gameState, Role.Police, roles[Role.Police]);
@@ -365,17 +369,17 @@ contract TokenHeist {
     // ================================ Modifiers ================================
 
     modifier onlyThief() {
-        require(msg.sender == roles[Role.Thief], "Only player1 can call this function");
+        require(_msgSender() == roles[Role.Thief], "Only player1 can call this function");
         _;
     }
 
     modifier onlyPolice() {
-        require(msg.sender == roles[Role.Police], "Only player2 can call this function");
+        require(_msgSender() == roles[Role.Police], "Only player2 can call this function");
         _;
     }
 
     modifier onlyPlayer() {
-        require(msg.sender == player1 || msg.sender == player2, "Only players can call this function");
+        require(_msgSender() == player1 || _msgSender() == player2, "Only players can call this function");
         _;
     }
 

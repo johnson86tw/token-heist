@@ -5,12 +5,16 @@ import {
 	type CSLobbyCount,
 	type CSRoomCount,
 } from '@token-heist/backend/src/types/socketTypes'
+import { getWebsocketUrl, LS_CLIENT_ID } from '../config'
 
 export let ws: WebSocket
 export let clientId: string
 
 export function createWebSocket() {
-	clientId = uuidv4()
+	if (!localStorage.getItem(LS_CLIENT_ID)) {
+		localStorage.setItem(LS_CLIENT_ID, uuidv4())
+	}
+	clientId = localStorage.getItem(LS_CLIENT_ID) as string
 
 	try {
 		const wsUrl = getWebsocketUrl()
@@ -38,7 +42,7 @@ export function createWebSocket() {
 		}
 
 		ws.onclose = (event: CloseEvent) => {
-			console.error('Websocket disconnected:', event.reason)
+			console.error('Websocket disconnected', event.reason)
 		}
 	} catch (error: any) {
 		error = error

@@ -6,9 +6,7 @@ import { useMessage } from 'naive-ui'
 
 const message = useMessage()
 
-setTimeout(() => {
-	message.success('Hello, world!')
-}, 3000)
+const temp = '0xcDDa0FB1BE0019d9B38Ac9618254926958b40375'
 
 // ----------------------- feat: lobby online count -----------------------
 
@@ -36,6 +34,10 @@ if (process.client) {
 		sendLobbyCount(false)
 	})
 }
+
+function onClickPlay() {
+	navigateTo(`/game/${temp}`)
+}
 </script>
 
 <template>
@@ -44,7 +46,7 @@ if (process.client) {
 			<p>{{ lobbyCount }}</p>
 			<n-button>Deploy contracts</n-button>
 			<n-button>Copy Invite Link</n-button>
-			<n-button @click="navigateTo('/game/0x202759E34e2B6D057E23F3d9d76220d08A3cCd46')"> Play </n-button>
+			<n-button @click="onClickPlay"> Play </n-button>
 		</div>
 	</n-space>
 </template>
