@@ -16,6 +16,13 @@ const props = withDefaults(
 	{},
 )
 
+const isSpectator = computed(() => props.role === 0)
+const isThief = computed(() => props.role === 1)
+const isPolice = computed(() => props.role === 2)
+const isMyTurn = computed(() => props.currentRole === props.role)
+const isThiefTurn = computed(() => isThief.value && isMyTurn.value)
+const isPoliceTurn = computed(() => isPolice.value && isMyTurn.value)
+
 const title = computed(() => {
 	switch (props.gameState) {
 		case 1:
@@ -31,9 +38,9 @@ const subtitle = computed(() => {
 	if (props.gameState === 3) return `Player ${props.winner} wins!`
 	switch (props.currentRole) {
 		case 1:
-			return props.role === 1 ? "It's your turn to steal" : "It's thief's turn"
+			return isMyTurn.value ? "It's your turn to steal" : "It's thief's turn"
 		case 2:
-			return props.role === 2 ? "It's your turn to catch" : "It's police's turn"
+			return isMyTurn.value ? "It's your turn to catch" : "It's police's turn"
 	}
 })
 
@@ -52,7 +59,7 @@ function to3x3Array(arr: number[]) {
 
 const board = ref(to3x3Array(props.prizeMap))
 
-const thiefPos = ref([-1, -1])
+const thiefPos = ref([1, 0])
 
 function isRedCells(x: number, y: number) {
 	if (!props.noticed) return false
@@ -90,12 +97,31 @@ function isRedCells(x: number, y: number) {
 	})
 }
 
+const thiefRef = ref(null)
+
+onMounted(() => {
+	console.log(thiefRef.value)
+
+	// const { $anime } = useNuxtApp()
+	// $anime({
+	// 	targets: foo.value,
+	// 	translateY: 250,
+	// })
+})
+
+function showRef() {
+	console.log(thiefRef.value)
+}
+
 // 'text-pink-500' : 'text-blue-400'
 </script>
 
 <template>
-	<ClientOnly>
-		<div v-if="gameState === 1 || gameState === 2" class="game">
+	<div>
+		<n-button @click="showRef">Button</n-button>
+		<div ref="thiefRef">Thief</div>
+
+		<div v-if="gameState === 1 || gameState === 2" class="game-state">
 			<div class="h-32">
 				<p class="title">{{ title }}</p>
 				<p class="subtitle">{{ subtitle }}</p>
@@ -114,7 +140,7 @@ function isRedCells(x: number, y: number) {
 						<p>{{ board[y][x] }}</p>
 
 						<!-- thief -->
-						<div v-if="x === thiefPos[0] && y === thiefPos[1]" class="absolute opacity-60">
+						<div v-show="x === thiefPos[0] && y === thiefPos[1]" class="absolute opacity-60">
 							<Thief />
 						</div>
 
@@ -128,21 +154,20 @@ function isRedCells(x: number, y: number) {
 				</div>
 			</div>
 
-			<div>
-				<Thief />
+			<div v-if="isPolice">
 				<Cop />
 			</div>
 		</div>
 
-		<div v-if="gameState === 3" class="game">
+		<div v-if="gameState === 3" class="game-state">
 			<p class="title">{{ title }}</p>
 			<p class="subtitle">{{ subtitle }}</p>
 		</div>
-	</ClientOnly>
+	</div>
 </template>
 
 <style lang="scss" scoped>
-.game {
+.game-state {
 	@apply pt-8 text-center;
 }
 

@@ -19,6 +19,8 @@ const GameProps = {
 	winner: Player.Player1,
 	noticed: false,
 }
+
+const thiefRef = ref(null)
 </script>
 
 <template>

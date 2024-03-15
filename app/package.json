@@ -20,6 +20,7 @@
 		"@token-heist/contracts": "*",
 		"@vueuse/core": "^10.9.0",
 		"@vueuse/nuxt": "^10.9.0",
+		"animejs": "^3.2.2",
 		"dayjs": "^1.11.10",
 		"ethers": "^6.11.1",
 		"naive-ui": "^2.38.1",
@@ -33,6 +34,7 @@
 	"devDependencies": {
 		"@nuxt/test-utils": "^3.11.0",
 		"@nuxtjs/tailwindcss": "^6.11.4",
+		"@types/animejs": "^3.1.12",
 		"@types/snarkjs": "^0.7.8",
 		"@types/uuid": "^9.0.8",
 		"@vue/test-utils": "^2.4.5",
