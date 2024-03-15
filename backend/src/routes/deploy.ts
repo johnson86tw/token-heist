@@ -1,7 +1,7 @@
 import { Express } from 'express'
 import { ethers, Wallet } from 'ethers'
 import { TokenHeist__factory } from '@token-heist/contracts/typechain-types'
-import { FORWARDER_ADDRESS, logger, PRIVATE_KEY, SNEAK_VERIFIER_SEPOLIA } from '../config'
+import { FORWARDER_ADDRESS, logger, PRIVATE_KEY, VERIFIER_ADDRESS } from '../config'
 
 const POSEIDON_T6_ADDRESS = '0x666333F371685334CdD69bdDdaFBABc87CE7c7Db'
 
@@ -29,7 +29,7 @@ export default (app: Express) => {
 				'poseidon-solidity/PoseidonT6.sol:PoseidonT6': POSEIDON_T6_ADDRESS,
 			},
 			signer,
-		).deploy(SNEAK_VERIFIER_SEPOLIA, FORWARDER_ADDRESS, prizeMap, timeLimitPerTurn, timeUpPoints)
+		).deploy(VERIFIER_ADDRESS, FORWARDER_ADDRESS, prizeMap, timeLimitPerTurn, timeUpPoints)
 
 		const address = await tokenHeist.getAddress()
 

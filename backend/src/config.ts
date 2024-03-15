@@ -43,14 +43,9 @@ if (!PRIVATE_KEY) {
 	throw new Error('PRIVATE_KEY is not set in .env file')
 }
 
-export const SNEAK_VERIFIER_SEPOLIA = process.env.SNEAK_VERIFIER_SEPOLIA as string
-if (!SNEAK_VERIFIER_SEPOLIA) {
-	throw new Error('SNEAK_VERIFIER_SEPOLIA is not set in .env file')
-}
-
-export const SNEAK_VERIFIER_ARBITRUM_SEPOLIA = process.env.SNEAK_VERIFIER_ARBITRUM_SEPOLIA as string
-if (!SNEAK_VERIFIER_ARBITRUM_SEPOLIA) {
-	throw new Error('SNEAK_VERIFIER_ARBITRUM_SEPOLIA is not set in .env file')
+export const VERIFIER_ADDRESS = process.env.VERIFIER_ADDRESS as string
+if (!VERIFIER_ADDRESS) {
+	throw new Error('VERIFIER_ADDRESS is not set in .env file')
 }
 
 export const FORWARDER_ADDRESS = process.env.FORWARDER_ADDRESS as string
