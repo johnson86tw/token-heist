@@ -17,6 +17,12 @@ export enum Role {
 	Police,
 }
 
+export enum Player {
+	None,
+	Player1,
+	Player2,
+}
+
 export enum GameState {
 	NotStarted,
 	RoundOneInProgress,

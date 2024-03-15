@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ws, sendLobbyCount } from '~/core/websocket'
 import { Channel, type ServerSendMsg, type SSLobbyCount } from '@token-heist/backend/src/types/socketTypes'
-import Deployment from '@token-heist/contracts/deployment/arbitrum-sepolia.json'
 
 import { useMessage } from 'naive-ui'
 
 const message = useMessage()
+
+const temp = '0xcDDa0FB1BE0019d9B38Ac9618254926958b40375'
 
 // ----------------------- feat: lobby online count -----------------------
 
@@ -35,7 +36,7 @@ if (process.client) {
 }
 
 function onClickPlay() {
-	navigateTo(`/game/${Deployment.tokenHeist}`)
+	navigateTo(`/game/${temp}`)
 }
 </script>
 

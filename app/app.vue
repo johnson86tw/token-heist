@@ -15,8 +15,6 @@ const themeOverrides: GlobalThemeOverrides = {
 	},
 }
 
-const appStore = useAppStore()
-
 if (process.client) {
 	createWebSocket()
 }

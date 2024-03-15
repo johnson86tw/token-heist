@@ -42,7 +42,7 @@ export function createWebSocket() {
 		}
 
 		ws.onclose = (event: CloseEvent) => {
-			console.error('Websocket disconnected:', event.reason)
+			console.error('Websocket disconnected', event.reason)
 		}
 	} catch (error: any) {
 		error = error
