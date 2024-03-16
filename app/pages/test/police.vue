@@ -24,7 +24,7 @@ const GameProps = {
 	prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
 	countdown: dayjs().add(30, 'minute'),
 	winner: Player.Player1,
-	noticed: false,
+	noticed: true,
 }
 </script>
 

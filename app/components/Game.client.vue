@@ -1,5 +1,14 @@
 <script setup lang="ts">
 import type { Ambushes, CopUsedCount, Countdown, GameState, Noticed, Paths, Player, PrizeMap, Role } from '~/types'
+import { useMessage } from 'naive-ui'
+const message = useMessage()
+
+enum Move {
+	Sneak = 'sneak',
+	Reveal = 'reveal',
+	Dispatch = 'dispatch',
+	Timeup = 'timeup',
+}
 
 const props = withDefaults(
 	defineProps<{
@@ -17,6 +26,22 @@ const props = withDefaults(
 	{},
 )
 
+const isSpectator = computed(() => props.role === 0)
+const isThief = computed(() => props.role === 1)
+const isPolice = computed(() => props.role === 2)
+const isPlayer = computed(() => props.role !== 0)
+const isMyTurn = computed(() => props.currentRole === props.role)
+const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
+const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
+const isPoliceFirstMove = computed(() => props.copUsedCount === 0)
+
+if (isPolice.value && props.noticed) {
+	message.info('The previous cop found the thief nearby, but they may have already left!', {
+		closable: true,
+		duration: 0,
+	})
+}
+
 // --------------------- Thief ---------------------
 const isThiefFirstMove = computed(() => {
 	return props.paths.every(path => path[0] === -1 && path[1] === -1)
@@ -30,15 +55,6 @@ const thiefLastMove = computed(() => {
 	}
 	return [-1, -1]
 })
-
-const isSpectator = computed(() => props.role === 0)
-const isThief = computed(() => props.role === 1)
-const isPolice = computed(() => props.role === 2)
-const isPlayer = computed(() => props.role !== 0)
-const isMyTurn = computed(() => props.currentRole === props.role)
-const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
-const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
-const isPoliceFirstMove = computed(() => props.copUsedCount === 0)
 
 const title = computed(() => {
 	switch (props.gameState) {
@@ -59,11 +75,6 @@ const subtitle = computed(() => {
 		case 2:
 			return isMyTurn.value ? "It's your turn to catch" : "It's police's turn"
 	}
-})
-
-const description = computed(() => {
-	if (props.noticed) return 'The previous cop found the thief nearby, but they may have already left!'
-	return ''
 })
 
 function to3x3Array(arr: number[]) {
@@ -206,7 +217,6 @@ watch(isMoved, () => {
 			<div class="h-20">
 				<p class="title">{{ title }}</p>
 				<p class="subtitle">{{ subtitle }}</p>
-				<!-- <p class="description">{{ description }}</p> -->
 			</div>
 
 			<!-- Board -->
@@ -293,10 +303,6 @@ watch(isMoved, () => {
 
 .subtitle {
 	@apply text-lg mb-4;
-}
-
-.description {
-	@apply text-base mb-4;
 }
 
 .bottom-btn {
