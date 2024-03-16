@@ -7,14 +7,14 @@ const GameProps = {
 	role: 1,
 	currentRole: 1,
 	paths: [
-		[1, 2],
+		[-1, -1],
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
 	],
 	ambushes: [
-		[1, 1],
+		[-1, -1],
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
@@ -25,6 +25,9 @@ const GameProps = {
 	countdown: dayjs().add(30, 'minute'),
 	winner: Player.Player1,
 	noticed: false,
+	isTimeup: false,
+	loading: false,
+	bottomBtnLoading: false,
 }
 </script>
 

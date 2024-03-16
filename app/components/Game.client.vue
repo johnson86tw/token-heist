@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import type { Ambushes, CopUsedCount, Countdown, GameState, Noticed, Paths, Player, PrizeMap, Role } from '~/types'
 import { useMessage } from 'naive-ui'
-const message = useMessage()
-
-enum Move {
-	Sneak = 'sneak',
-	Reveal = 'reveal',
-	Dispatch = 'dispatch',
-	Timeup = 'timeup',
-}
 
 const props = withDefaults(
 	defineProps<{
@@ -22,24 +14,36 @@ const props = withDefaults(
 		countdown: Countdown
 		winner: Player
 		noticed: Noticed
+		isTimeup: boolean
+		loading: boolean
+		bottomBtnLoading: boolean
 	}>(),
 	{},
 )
 
+// Check if the props are reasonable.
+
+const emit = defineEmits(['sneak', 'dispatch', 'timeup'])
+
 const isSpectator = computed(() => props.role === 0)
 const isThief = computed(() => props.role === 1)
 const isPolice = computed(() => props.role === 2)
-const isPlayer = computed(() => props.role !== 0)
+const isPlayer = computed(() => props.role === 1 || props.role === 2)
 const isMyTurn = computed(() => props.currentRole === props.role)
 const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
 const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
-const isPoliceFirstMove = computed(() => props.copUsedCount === 0)
 
-if (isPolice.value && props.noticed) {
-	message.info('The previous cop found the thief nearby, but they may have already left!', {
-		closable: true,
-		duration: 0,
-	})
+// --------------------- Notice ---------------------
+const message = useMessage()
+
+if (isPoliceMyTurn.value && props.noticed) {
+	message.info(
+		'The previous cop found the thief nearby! Note that they may stay put in the red cell or have already left.',
+		{
+			closable: true,
+			duration: 0,
+		},
+	)
 }
 
 // --------------------- Thief ---------------------
@@ -55,6 +59,8 @@ const thiefLastMove = computed(() => {
 	}
 	return [-1, -1]
 })
+
+// --------------------- Block above board ---------------------
 
 const title = computed(() => {
 	switch (props.gameState) {
@@ -76,6 +82,10 @@ const subtitle = computed(() => {
 			return isMyTurn.value ? "It's your turn to catch" : "It's police's turn"
 	}
 })
+
+// --------------------- Board ---------------------
+
+const board = ref(to3x3Array(props.prizeMap))
 
 function to3x3Array(arr: number[]) {
 	const res = []
@@ -131,8 +141,10 @@ function isClickableCell(x: number, y: number) {
 		return true
 	}
 	if (isThiefMyTurn.value) {
-		// thief can only move to adjacent cells
+		if (isThiefFirstMove.value) return true
+		// thief can stay put or move to adjacent cells
 		const moves = [
+			[0, 0],
 			[1, 0],
 			[0, 1],
 			[-1, 0],
@@ -153,9 +165,8 @@ function isClickableCell(x: number, y: number) {
 }
 
 const bottomCopCount = computed(() => {
-	if (isMoved.value) {
-		return props.copUsedCount - 1
-	}
+	if (!isPoliceMyTurn.value) return 0
+	if (isMoved.value) return props.copUsedCount - 1
 	return props.copUsedCount
 })
 
@@ -163,7 +174,7 @@ function isSelectedCell(x: number, y: number) {
 	return placement.value[0] === x && placement.value[1] === y
 }
 
-const board = ref(to3x3Array(props.prizeMap))
+// --------------------- Make move ---------------------
 
 const placementRef = ref()
 const placement = ref([-1, -1])
@@ -172,12 +183,17 @@ const isMoved = ref(false)
 async function makeMove(x: number, y: number) {
 	if (!isPlayer.value) return
 	if (!isClickableCell(x, y)) return
-	// Return back if selected cell is the same as the current placement
-	if (placement.value[0] === x && placement.value[1] === y) {
-		placement.value = [-1, -1]
-		isMoved.value = false
-		return
+
+	// only thief's first move and police's move
+	if (isThiefFirstMove.value || isPoliceMyTurn.value) {
+		// Return back if selected cell is the same as the current placement
+		if (placement.value[0] === x && placement.value[1] === y) {
+			placement.value = [-1, -1]
+			isMoved.value = false
+			return
+		}
 	}
+
 	placement.value = [x, y]
 	isMoved.value = true
 
@@ -192,22 +208,54 @@ async function makeMove(x: number, y: number) {
 	// })
 }
 
-// 'text-pink-500' : 'text-blue-400'
+// --------------------- Bottom button ---------------------
+enum Move {
+	None = '',
+	StayPut = 'stay put',
+	Sneak = 'sneak',
+	Dispatch = 'dispatch',
+	TimeUp = 'time up',
+}
 
-const showBottomBtn = ref(false)
-const bottomBtnText = computed(() => {
-	if (isThiefMyTurn.value) return 'Sneak'
-	if (isPoliceMyTurn.value) return 'Dispatch'
-	return ''
-})
-
-watch(isMoved, () => {
-	if (isMoved.value) {
-		showBottomBtn.value = true
-	} else {
-		showBottomBtn.value = false
+const isNotMyTurn = computed(() => isPlayer.value && !isMyTurn.value)
+const isThiefStayPut = computed(() => {
+	if (
+		isThiefMyTurn.value &&
+		placement.value[0] !== -1 &&
+		placement.value[1] !== -1 &&
+		placement.value[0] === thiefLastMove.value[0] &&
+		placement.value[1] === thiefLastMove.value[1]
+	) {
+		return true
 	}
+	return false
 })
+const bottomBtnText = computed<Move>(() => {
+	if (isThiefStayPut.value) return Move.StayPut
+	if (isThiefMyTurn.value && isMoved.value) return Move.Sneak
+	if (isPoliceMyTurn.value && isMoved.value) return Move.Dispatch
+	if (isNotMyTurn.value && props.isTimeup) {
+		return Move.TimeUp
+	}
+	return Move.None
+})
+const showBottomBtn = computed(() => {
+	return !!bottomBtnText.value
+})
+
+function onClickBottomBtn() {
+	if (bottomBtnText.value === Move.Sneak || bottomBtnText.value === Move.StayPut) {
+		emit('sneak', placement.value)
+	}
+	if (bottomBtnText.value === Move.Dispatch) {
+		emit('dispatch', placement.value)
+	}
+	if (bottomBtnText.value === Move.TimeUp) {
+		emit('timeup')
+	}
+}
+
+// 'text-pink-500' : 'text-blue-400'
 </script>
 
 <template>
@@ -271,14 +319,8 @@ watch(isMoved, () => {
 			</div>
 
 			<!-- Bottom button -->
-			<n-drawer
-				:show-mask="false"
-				:mask-closable="false"
-				v-model:show="showBottomBtn"
-				:height="55"
-				placement="bottom"
-			>
-				<n-button class="bottom-btn">
+			<n-drawer :show="showBottomBtn" :show-mask="false" :mask-closable="false" :height="55" placement="bottom">
+				<n-button class="bottom-btn" @click="onClickBottomBtn">
 					{{ bottomBtnText }}
 				</n-button>
 			</n-drawer>
@@ -306,6 +348,6 @@ watch(isMoved, () => {
 }
 
 .bottom-btn {
-	@apply w-full h-full flex justify-center items-center text-xl uppercase bg-teal-800 hover:bg-teal-900 cursor-pointer;
+	@apply w-full h-full flex justify-center items-center text-xl uppercase bg-teal-700 hover:bg-teal-800 focus:bg-teal-800 cursor-pointer;
 }
 </style>

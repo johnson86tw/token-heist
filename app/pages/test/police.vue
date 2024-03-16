@@ -5,7 +5,7 @@ import { Player } from '~/types'
 const GameProps = {
 	gameState: 1,
 	role: 2,
-	currentRole: 2,
+	currentRole: 1,
 	paths: [
 		[-1, -1],
 		[-1, -1],
@@ -25,6 +25,9 @@ const GameProps = {
 	countdown: dayjs().add(30, 'minute'),
 	winner: Player.Player1,
 	noticed: true,
+	isTimeup: true,
+	loading: false,
+	bottomBtnLoading: false,
 }
 </script>
 

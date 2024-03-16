@@ -25,6 +25,9 @@ const GameProps = {
 	countdown: dayjs().add(30, 'minute'),
 	winner: Player.Player1,
 	noticed: false,
+	isTimeup: false,
+	loading: false,
+	bottomBtnLoading: false,
 }
 </script>
 
