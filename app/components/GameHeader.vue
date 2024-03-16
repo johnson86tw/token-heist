@@ -11,7 +11,7 @@ if (!address) {
 
 const showTips = ref(false)
 
-const { player1, player2 } = storeToRefs(useContractStore())
+const { player1, player2 } = storeToRefs(useGameStore())
 
 // ----------------------- feat: lobby online count -----------------------
 

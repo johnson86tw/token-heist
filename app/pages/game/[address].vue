@@ -12,11 +12,11 @@ if (!address) {
 	navigateTo('/')
 }
 
-const contractStore = useContractStore()
-
-if (process.client) {
+const contractStore = useGameStore()
+onMounted(async () => {
 	await contractStore.init(address)
-}
+	await contractStore.fetchContractData()
+})
 
 const { gameState } = storeToRefs(contractStore)
 

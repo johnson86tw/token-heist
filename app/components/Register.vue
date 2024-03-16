@@ -35,19 +35,6 @@ onUnmounted(() => {
 const player1Registering = ref(false)
 const player2Registering = ref(false)
 
-async function register(n: number) {
-	const calldata = await genCalldata({
-		tokenHeistAddress: address,
-		provider: provider,
-		signer: signer,
-		data: tokenHeist.interface.encodeFunctionData('register', [n]),
-	})
-	await $fetch(getApiUrl() + '/relay', {
-		method: 'POST',
-		body: calldata,
-	})
-}
-
 async function onClickRegister(n: number) {
 	try {
 		if (n === 1) player1Registering.value = true
