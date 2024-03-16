@@ -4,7 +4,7 @@ import type { Provider } from 'ethers'
 import { HDNodeWallet, ethers } from 'ethers'
 import { defineStore } from 'pinia'
 import { LS_PRIVATE_KEY, RPC_URL, getApiUrl } from '~/config'
-import type { Ambushes, CircuitInput, GameState, Paths } from '~/types'
+import { Role, type Ambushes, type CircuitInput, type GameState, type Paths, Player, type PrizeMap } from '~/types'
 import { exportCallDataBigInt } from '~/utils/zkp'
 
 export let tokenHeist: TokenHeist
@@ -15,13 +15,18 @@ export const useGameStore = defineStore('GameStore', {
 	state: (): {
 		tokenHeistAddress: string
 		gameState: GameState
+		currentRole: Role
+		currentPlayer: Player
 		player1: string
 		player2: string
 		paths: Paths
 		ambushes: Ambushes
+		prizeMap: PrizeMap
 	} => ({
 		tokenHeistAddress: '',
 		gameState: 0,
+		currentRole: Role.None,
+		currentPlayer: Player.None,
 		player1: '',
 		player2: '',
 		paths: [
@@ -38,15 +43,36 @@ export const useGameStore = defineStore('GameStore', {
 			[-1, -1],
 			[-1, -1],
 		],
+		// temporary not fetch from contract
+		prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
 	}),
 	getters: {
-		lastAmbush(state): [number, number] {
-			for (let i = 4; i >= 0; i--) {
-				if (state.ambushes[i][0] !== -1 && state.ambushes[i][1] !== -1) {
-					return state.ambushes[i]
-				}
+		userAddress(): string {
+			return signer.address
+		},
+		userIsPlayer(): Player {
+			switch (this.userAddress) {
+				case this.player1:
+					return Player.Player1
+				case this.player2:
+					return Player.Player2
+				default:
+					return Player.None
 			}
-			return [-1, -1]
+		},
+		userIsRole(): Role {
+			if (!this.userIsPlayer) return Role.None
+			if (this.currentPlayer === this.userIsPlayer) {
+				return this.currentRole
+			} else {
+				return this.currentRole === Role.Police ? Role.Thief : Role.Police
+			}
+		},
+		lastPath(): [number, number] {
+			return findLastValidCell(this.paths)
+		},
+		lastAmbush(): [number, number] {
+			return findLastValidCell(this.ambushes)
 		},
 	},
 	actions: {
@@ -74,8 +100,10 @@ export const useGameStore = defineStore('GameStore', {
 				[flattenedAmbushes[6], flattenedAmbushes[7]],
 				[flattenedAmbushes[8], flattenedAmbushes[9]],
 			]
+			this.currentRole = Number(await tokenHeist.currentRole()) as Role
+			this.currentPlayer = Number(await tokenHeist.currentPlayer()) as Player
 		},
-		async register(n: number) {
+		async register(n: Player.Player1 | Player.Player2) {
 			const calldata = await genCalldata({
 				tokenHeistAddress: this.tokenHeistAddress,
 				provider: provider,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Ambushes, CopUsedCount, Countdown, GameState, Noticed, Paths, Player, PrizeMap, Role } from '~/types'
+import type { Ambushes, Countdown, GameState, Noticed, Paths, PrizeMap, Role } from '~/types'
 import { useMessage } from 'naive-ui'
 
 const props = withDefaults(
@@ -9,14 +9,10 @@ const props = withDefaults(
 		currentRole: Role
 		paths: Paths
 		ambushes: Ambushes
-		copUsedCount: CopUsedCount
 		prizeMap: PrizeMap
 		countdown: Countdown
-		winner: Player
 		noticed: Noticed
 		isTimeup: boolean
-		loading: boolean
-		bottomBtnLoading: boolean
 	}>(),
 	{},
 )
@@ -163,8 +159,14 @@ function isClickableCell(x: number, y: number) {
 
 const bottomCopCount = computed(() => {
 	if (!isPoliceMyTurn.value) return 0
-	if (isMoved.value) return props.copUsedCount - 1
-	return props.copUsedCount
+	let copUsedCount = 5
+	for (let i = 4; i >= 0; i--) {
+		if (props.ambushes[i][0] !== -1 && props.ambushes[i][1] !== -1) {
+			copUsedCount--
+		}
+	}
+	if (isMoved.value) return copUsedCount - 1
+	return copUsedCount
 })
 
 function isSelectedCell(x: number, y: number) {

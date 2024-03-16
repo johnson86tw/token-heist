@@ -12,7 +12,7 @@ declare module 'nuxt/schema' {
 export {}
 
 export enum Role {
-	Spectator,
+	None,
 	Thief,
 	Police,
 }

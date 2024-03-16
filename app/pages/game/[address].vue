@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { useMessage } from 'naive-ui'
-import { Player } from '~/types'
+import { GameState, Player } from '~/types'
 
 const message = useMessage()
 
@@ -18,42 +18,57 @@ onMounted(async () => {
 	await contractStore.fetchContractData()
 })
 
-const { gameState } = storeToRefs(contractStore)
+// ----------------------- feat: subscribe to events -----------------------
+const { gameState, currentRole, userIsRole, prizeMap } = storeToRefs(contractStore)
+
+const RegisterEventSet = new Set<string>()
+// @ts-ignore
+tokenHeist.on('Registered', (address: string, event: ContractEventPayload) => {
+	const blockHash = event.log.blockHash
+	if (RegisterEventSet.has(blockHash)) return
+
+	message.info(`${address} Registered`)
+	RegisterEventSet.add(blockHash)
+})
+
+onUnmounted(() => {
+	tokenHeist.removeAllListeners()
+})
 
 const GameProps = {
-	gameState: 1,
-	role: 1,
-	currentRole: 1,
+	gameState: gameState.value,
+	role: userIsRole.value,
+	currentRole: currentRole.value,
 	paths: [
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
-	],
+	] as [number, number][],
 	ambushes: [
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
-	],
+	] as [number, number][],
 	copUsedCount: 0,
-	prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
-	countdown: dayjs().add(30, 'minute'),
-	winner: Player.Player1,
-	noticed: false,
-	isTimeup: false,
-	loading: false,
-	bottomBtnLoading: false,
+	prizeMap: prizeMap.value,
+	countdown: dayjs().add(30, 'minute'), // skip temporarily
+	noticed: false, // get from sneak event
+	isTimeup: false, // skip temporarily
 }
 </script>
 
 <template>
 	<ClientOnly>
 		<GameHeader />
-		<Register v-if="gameState === 0" />
-		<GameInProgress v-if="gameState === 1 || gameState === 2" v-bind="GameProps" />
-		<GameOver v-if="gameState === 3" />
+		<Register v-if="gameState === GameState.NotStarted" />
+		<GameInProgress
+			v-if="gameState === GameState.RoundOneInProgress || gameState === GameState.RoundTwoInProgress"
+			v-bind="GameProps"
+		/>
+		<GameOver v-if="gameState === GameState.Ended" />
 	</ClientOnly>
 </template>
