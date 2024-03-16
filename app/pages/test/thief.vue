@@ -4,7 +4,7 @@ import { Player } from '~/types'
 
 const GameProps = {
 	gameState: 1,
-	role: 1,
+	userRole: 1,
 	currentRole: 1,
 	paths: [
 		[-1, -1],

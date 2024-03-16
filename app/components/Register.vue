@@ -14,7 +14,6 @@ const message = useMessage()
 // ----------------------- feat: register -----------------------
 
 const gameStore = useGameStore()
-const { player1, player2 } = storeToRefs(gameStore)
 
 const player1Registering = ref(false)
 const player2Registering = ref(false)
@@ -36,16 +35,28 @@ async function onClickRegister(n: Player.Player1 | Player.Player2) {
 		if (n === 2) player2Registering.value = false
 	}
 }
+
+const p1RegisterDisabled = computed(() => {
+	if (gameStore.initialized && !gameStore.player1) return false
+	return true
+})
+
+const p2RegisterDisabled = computed(() => {
+	if (gameStore.initialized && !gameStore.player2) return false
+	return true
+})
+
+const { player1, player2 } = storeToRefs(gameStore)
 </script>
 
 <template>
 	<n-space justify="center" class="p-4 mt-16">
 		<div class="flex flex-col gap-4">
-			<n-button :loading="player1Registering" :disabled="!!player1" @click="onClickRegister(1)">
+			<n-button :loading="player1Registering" :disabled="p1RegisterDisabled" @click="onClickRegister(1)">
 				{{ player1 ? 'Player 1 Registered' : 'Register as Player 1' }}
 			</n-button>
 
-			<n-button :loading="player2Registering" :disabled="!!player2" @click="onClickRegister(2)">
+			<n-button :loading="player2Registering" :disabled="p2RegisterDisabled" @click="onClickRegister(2)">
 				{{ player2 ? 'Player 2 Registered' : 'Register as Player 2' }}
 			</n-button>
 		</div>

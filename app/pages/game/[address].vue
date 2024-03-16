@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import type { ContractEventPayload } from 'ethers'
 import { useMessage } from 'naive-ui'
 import { tokenHeist } from '~/stores/gameStore'
 import { GameState, Player } from '~/types'
@@ -16,20 +17,36 @@ if (!address) {
 const gameStore = useGameStore()
 
 onMounted(async () => {
-	await gameStore.init(address)
-	await gameStore.fetchContractData()
+	try {
+		await gameStore.init(address)
+		await gameStore.fetchContractData()
+	} catch (err: any) {
+		message.error(err.message)
+		return
+	}
+})
+// ----------------------- feat: subscribe to events -----------------------
 
-	// ----------------------- feat: subscribe to events -----------------------
+watch([() => gameStore.initialized, () => gameStore.gameState], () => {
+	console.log('watching initialized and gameState')
+	if (gameStore.gameState === GameState.NotStarted) {
+		const RegisterEventSet = new Set<string>()
 
-	const RegisterEventSet = new Set<string>()
-	// @ts-ignore
-	tokenHeist.on('Registered', (address: string, event: ContractEventPayload) => {
-		const blockHash = event.log.blockHash
-		if (RegisterEventSet.has(blockHash)) return
+		// tokenHeist.on(tokenHeist.getEvent('Registered'), (address: string, event: any) => {
+		// 	console.log('Registered')
+		// 	const blockHash = event.log.blockHash
+		// 	if (RegisterEventSet.has(blockHash)) return
+		// 	RegisterEventSet.add(blockHash)
 
-		message.info(`${address} Registered`)
-		RegisterEventSet.add(blockHash)
-	})
+		// 	message.info(`${address} Registered`)
+		// 	gameStore.fetchContractData()
+		// })
+
+		// tokenHeist.on(tokenHeist.getEvent('GameStarted'), () => {
+		// 	message.info('Game Started!')
+		// 	gameStore.fetchContractData()
+		// })
+	}
 })
 
 onUnmounted(() => {
@@ -38,7 +55,7 @@ onUnmounted(() => {
 
 const GameProps = {
 	gameState: gameStore.gameState,
-	role: gameStore.userIsRole,
+	userRole: gameStore.userRole,
 	currentRole: gameStore.currentRole,
 	paths: [
 		[-1, -1],

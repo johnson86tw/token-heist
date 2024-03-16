@@ -5,7 +5,7 @@ import { useMessage } from 'naive-ui'
 const props = withDefaults(
 	defineProps<{
 		gameState: GameState
-		role: Role
+		userRole: Role
 		currentRole: Role
 		paths: Paths
 		ambushes: Ambushes
@@ -17,15 +17,15 @@ const props = withDefaults(
 	{},
 )
 
+const gameStore = useGameStore()
+
 // Check if the props are reasonable.
 
-const emit = defineEmits(['sneak', 'dispatch', 'timeup'])
-
-const isSpectator = computed(() => props.role === 0)
-const isThief = computed(() => props.role === 1)
-const isPolice = computed(() => props.role === 2)
-const isPlayer = computed(() => props.role === 1 || props.role === 2)
-const isMyTurn = computed(() => props.currentRole === props.role)
+const isSpectator = computed(() => props.userRole === 0)
+const isThief = computed(() => props.userRole === 1)
+const isPolice = computed(() => props.userRole === 2)
+const isPlayer = computed(() => props.userRole === 1 || props.userRole === 2)
+const isMyTurn = computed(() => props.currentRole === props.userRole)
 const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
 const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
 
@@ -244,13 +244,15 @@ const showBottomBtn = computed(() => {
 
 function onClickBottomBtn() {
 	if (bottomBtnText.value === Move.Sneak || bottomBtnText.value === Move.StayPut) {
-		emit('sneak', placement.value)
+		// const newPath = props.paths
+		// gameStore.sneak()
+		console.log('sneak', placement.value)
 	}
 	if (bottomBtnText.value === Move.Dispatch) {
-		emit('dispatch', placement.value)
+		console.log('dispatch', placement.value)
 	}
 	if (bottomBtnText.value === Move.TimeUp) {
-		emit('timeup')
+		console.log('timeup')
 	}
 }
 
@@ -295,7 +297,7 @@ function onClickBottomBtn() {
 					</div>
 
 					<!-- ambushed cops -->
-					<div v-for="(ambush, i) in ambushes" :key="i" class="absolute">
+					<div v-for="(ambush, i) in props.ambushes" :key="i" class="absolute">
 						<div v-if="x === ambush[0] && y === ambush[1]">
 							<Cop />
 						</div>

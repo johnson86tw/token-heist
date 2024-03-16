@@ -13,20 +13,24 @@ export let signer: Wallet
 
 export const useGameStore = defineStore('GameStore', {
 	state: (): {
+		initialized: boolean
+		userAddress: string
 		tokenHeistAddress: string
 		gameState: GameState
 		currentRole: Role
-		currentPlayer: Player
+		currentPlayer: string
 		player1: string
 		player2: string
 		paths: Paths
 		ambushes: Ambushes
 		prizeMap: PrizeMap
 	} => ({
+		initialized: false,
+		userAddress: '',
 		tokenHeistAddress: '',
 		gameState: 0,
 		currentRole: Role.None,
-		currentPlayer: Player.None,
+		currentPlayer: '',
 		player1: '',
 		player2: '',
 		paths: [
@@ -47,11 +51,7 @@ export const useGameStore = defineStore('GameStore', {
 		prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
 	}),
 	getters: {
-		userAddress(): string {
-			if (!signer) return '' // important!
-			return signer.address
-		},
-		userIsPlayer(): Player {
+		userPlayerN(): Player {
 			switch (this.userAddress) {
 				case this.player1:
 					return Player.Player1
@@ -61,13 +61,12 @@ export const useGameStore = defineStore('GameStore', {
 					return Player.None
 			}
 		},
-		userIsRole(): Role {
-			if (!this.userIsPlayer) return Role.None
-			if (this.currentPlayer === this.userIsPlayer) {
+		userRole(): Role {
+			if (this.userPlayerN === Player.None) return Role.None
+			if (this.currentPlayer === this.userAddress) {
 				return this.currentRole
-			} else {
-				return this.currentRole === Role.Police ? Role.Thief : Role.Police
 			}
+			return this.currentRole === Role.Police ? Role.Thief : Role.Police
 		},
 		lastPath(): [number, number] {
 			return findLastValidCell(this.paths)
@@ -88,8 +87,11 @@ export const useGameStore = defineStore('GameStore', {
 			tokenHeist = TokenHeist__factory.connect(tokenHeistAddress, signer)
 
 			if (!provider || !signer || !tokenHeist) {
-				throw new Error('Failed to init')
+				throw new Error('Failed to initialize')
 			}
+
+			this.initialized = true
+			this.userAddress = signer.address
 
 			console.log('user', signer.address)
 
@@ -111,8 +113,8 @@ export const useGameStore = defineStore('GameStore', {
 				[flattenedAmbushes[6], flattenedAmbushes[7]],
 				[flattenedAmbushes[8], flattenedAmbushes[9]],
 			]
-			this.currentRole = Number(await tokenHeist.currentRole()) as Role
-			this.currentPlayer = Number(await tokenHeist.currentPlayer()) as Player
+			this.currentRole = Number(await tokenHeist.currentRole())
+			this.currentPlayer = await tokenHeist.currentPlayer()
 		},
 		async register(n: Player.Player1 | Player.Player2) {
 			const calldata = await genCalldata({

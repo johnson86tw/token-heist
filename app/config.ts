@@ -17,5 +17,8 @@ export function getApiUrl(): string {
 }
 
 export const RPC_URL = 'https://sepolia-rollup.arbitrum.io/rpc'
+// export const RPC_URL = 'https://public.stackup.sh/api/v1/node/arbitrum-sepolia'
+// export const RPC_URL = 'https://arbitrum-sepolia.blockpi.network/v1/rpc/public'
+
 export const LS_PRIVATE_KEY = 'token-heist-private-key'
 export const LS_CLIENT_ID = 'token-heist-client-id'
