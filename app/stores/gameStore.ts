@@ -1,5 +1,5 @@
 import { TokenHeist__factory, type TokenHeist } from '@token-heist/contracts/typechain-types'
-import { Wallet } from 'ethers'
+import { Wallet, ZeroAddress, isAddress } from 'ethers'
 import type { Provider } from 'ethers'
 import { HDNodeWallet, ethers } from 'ethers'
 import { defineStore } from 'pinia'
@@ -48,6 +48,7 @@ export const useGameStore = defineStore('GameStore', {
 	}),
 	getters: {
 		userAddress(): string {
+			if (!signer) return '' // important!
 			return signer.address
 		},
 		userIsPlayer(): Player {
@@ -84,14 +85,24 @@ export const useGameStore = defineStore('GameStore', {
 			const privateKey = localStorage.getItem(LS_PRIVATE_KEY) as string
 			provider = new ethers.JsonRpcProvider(RPC_URL)
 			signer = new Wallet(privateKey, provider)
-			console.log('user', signer.address)
 			tokenHeist = TokenHeist__factory.connect(tokenHeistAddress, signer)
+
+			if (!provider || !signer || !tokenHeist) {
+				throw new Error('Failed to init')
+			}
+
+			console.log('user', signer.address)
+
 			this.tokenHeistAddress = tokenHeistAddress
 		},
 		async fetchContractData() {
 			this.gameState = Number(await tokenHeist.gameState())
-			this.player1 = await tokenHeist.player1()
-			this.player2 = await tokenHeist.player2()
+			const p1Addr = await tokenHeist.player1() // may return 0x0000... if not set
+			const p2Addr = await tokenHeist.player2()
+
+			this.player1 = p1Addr === ZeroAddress ? '' : p1Addr
+			this.player2 = p2Addr === ZeroAddress ? '' : p2Addr
+
 			const flattenedAmbushes = (await tokenHeist.flattenedAmbushes()).map(x => Number(x))
 			this.ambushes = [
 				[flattenedAmbushes[0], flattenedAmbushes[1]],

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { useMessage } from 'naive-ui'
+import { tokenHeist } from '~/stores/gameStore'
 import { GameState, Player } from '~/types'
 
 const message = useMessage()
@@ -12,23 +13,23 @@ if (!address) {
 	navigateTo('/')
 }
 
-const contractStore = useGameStore()
+const gameStore = useGameStore()
+
 onMounted(async () => {
-	await contractStore.init(address)
-	await contractStore.fetchContractData()
-})
+	await gameStore.init(address)
+	await gameStore.fetchContractData()
 
-// ----------------------- feat: subscribe to events -----------------------
-const { gameState, currentRole, userIsRole, prizeMap } = storeToRefs(contractStore)
+	// ----------------------- feat: subscribe to events -----------------------
 
-const RegisterEventSet = new Set<string>()
-// @ts-ignore
-tokenHeist.on('Registered', (address: string, event: ContractEventPayload) => {
-	const blockHash = event.log.blockHash
-	if (RegisterEventSet.has(blockHash)) return
+	const RegisterEventSet = new Set<string>()
+	// @ts-ignore
+	tokenHeist.on('Registered', (address: string, event: ContractEventPayload) => {
+		const blockHash = event.log.blockHash
+		if (RegisterEventSet.has(blockHash)) return
 
-	message.info(`${address} Registered`)
-	RegisterEventSet.add(blockHash)
+		message.info(`${address} Registered`)
+		RegisterEventSet.add(blockHash)
+	})
 })
 
 onUnmounted(() => {
@@ -36,9 +37,9 @@ onUnmounted(() => {
 })
 
 const GameProps = {
-	gameState: gameState.value,
-	role: userIsRole.value,
-	currentRole: currentRole.value,
+	gameState: gameStore.gameState,
+	role: gameStore.userIsRole,
+	currentRole: gameStore.currentRole,
 	paths: [
 		[-1, -1],
 		[-1, -1],
@@ -54,11 +55,13 @@ const GameProps = {
 		[-1, -1],
 	] as [number, number][],
 	copUsedCount: 0,
-	prizeMap: prizeMap.value,
+	prizeMap: gameStore.prizeMap,
 	countdown: dayjs().add(30, 'minute'), // skip temporarily
 	noticed: false, // get from sneak event
 	isTimeup: false, // skip temporarily
 }
+
+const { gameState } = storeToRefs(gameStore)
 </script>
 
 <template>
