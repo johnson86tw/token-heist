@@ -122,10 +122,10 @@ if (process.client) {
 <template>
 	<ClientOnly>
 		<div v-if="gameState === 0">
-			<n-space justify="center" class="p-4 mt-52">
-				<div class="flex flex-col gap-2">
-					<n-button :loading="player1Registering" @click="onClickRegister(1)">Register Player 1</n-button>
-					<n-button :loading="player2Registering" @click="onClickRegister(2)">Register Player 2</n-button>
+			<n-space justify="center" class="p-4 mt-32">
+				<div class="flex flex-col gap-4">
+					<n-button :loading="player1Registering" @click="onClickRegister(1)">Register as Player 1</n-button>
+					<n-button :loading="player2Registering" @click="onClickRegister(2)">Register as Player 2</n-button>
 				</div>
 			</n-space>
 		</div>
