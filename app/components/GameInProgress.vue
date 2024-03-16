@@ -68,13 +68,10 @@ const title = computed(() => {
 			return 'Round 1'
 		case 2:
 			return 'Round 2'
-		case 3:
-			return 'Game Over'
 	}
 })
 
 const subtitle = computed(() => {
-	if (props.gameState === 3) return `Player ${props.winner} wins!`
 	switch (props.currentRole) {
 		case 1:
 			return isMyTurn.value ? "It's your turn to steal" : "It's thief's turn"
@@ -259,80 +256,68 @@ function onClickBottomBtn() {
 </script>
 
 <template>
-	<div>
-		<GameHeader />
+	<div class="game-state">
+		<div class="h-20">
+			<p class="title">{{ title }}</p>
+			<p class="subtitle">{{ subtitle }}</p>
+		</div>
 
-		<!-- Game in progress state -->
-		<div v-if="gameState === 1 || gameState === 2" class="game-state">
-			<div class="h-20">
-				<p class="title">{{ title }}</p>
-				<p class="subtitle">{{ subtitle }}</p>
-			</div>
+		<!-- Board -->
+		<div class="flex flex-col items-center">
+			<div v-for="(row, y) in board" :key="y" class="flex">
+				<!-- Cell -->
+				<div
+					v-for="(prize, x) in row"
+					:key="x"
+					class="relative border border-white w-20 h-20 flex items-center justify-center text-4xl"
+					:class="{
+						'bg-red-600 bg-opacity-40': isRedCells(x, y),
+						'hover:bg-gray-400 hover:bg-opacity-20 cursor-pointer': isClickableCell(x, y),
+						'bg-gray-400 bg-opacity-20': isSelectedCell(x, y) && isPlayer,
+						'bg-red-400 bg-opacity-20': isThiefMyTurn && thiefLastMove[0] === x && thiefLastMove[1] === y,
+					}"
+					@click="makeMove(x, y)"
+				>
+					<!-- prize map -->
+					<p>{{ board[y][x] }}</p>
 
-			<!-- Board -->
-			<div class="flex flex-col items-center">
-				<div v-for="(row, y) in board" :key="y" class="flex">
-					<!-- Cell -->
-					<div
-						v-for="(prize, x) in row"
-						:key="x"
-						class="relative border border-white w-20 h-20 flex items-center justify-center text-4xl"
-						:class="{
-							'bg-red-600 bg-opacity-40': isRedCells(x, y),
-							'hover:bg-gray-400 hover:bg-opacity-20 cursor-pointer': isClickableCell(x, y),
-							'bg-gray-400 bg-opacity-20': isSelectedCell(x, y) && isPlayer,
-							'bg-red-400 bg-opacity-20':
-								isThiefMyTurn && thiefLastMove[0] === x && thiefLastMove[1] === y,
-						}"
-						@click="makeMove(x, y)"
-					>
-						<!-- prize map -->
-						<p>{{ board[y][x] }}</p>
+					<!-- Selected cell -->
+					<div ref="placementRef" v-if="isPlayer && isSelectedCell(x, y)" class="absolute">
+						<Thief v-if="isThiefMyTurn" class="opacity-60" />
+						<Cop v-if="isPoliceMyTurn" />
+					</div>
 
-						<!-- Selected cell -->
-						<div ref="placementRef" v-if="isPlayer && isSelectedCell(x, y)" class="absolute">
-							<Thief v-if="isThiefMyTurn" class="opacity-60" />
-							<Cop v-if="isPoliceMyTurn" />
-						</div>
+					<!-- thief's last move -->
+					<div v-if="isThiefMyTurn && !isThiefFirstMove && !isMoved" class="absolute">
+						<Thief v-if="x === thiefLastMove[0] && y === thiefLastMove[1]" class="opacity-60" />
+					</div>
 
-						<!-- thief's last move -->
-						<div v-if="isThiefMyTurn && !isThiefFirstMove && !isMoved" class="absolute">
-							<Thief v-if="x === thiefLastMove[0] && y === thiefLastMove[1]" class="opacity-60" />
-						</div>
-
-						<!-- ambushed cops -->
-						<div v-for="(ambush, i) in ambushes" :key="i" class="absolute">
-							<div v-if="x === ambush[0] && y === ambush[1]">
-								<Cop />
-							</div>
+					<!-- ambushed cops -->
+					<div v-for="(ambush, i) in ambushes" :key="i" class="absolute">
+						<div v-if="x === ambush[0] && y === ambush[1]">
+							<Cop />
 						</div>
 					</div>
 				</div>
 			</div>
+		</div>
 
-			<!-- Block below board -->
-			<div class="flex flex-col items-center mt-10">
-				<div v-if="isThiefMyTurn && isThiefFirstMove && !isMoved">
-					<Thief />
-				</div>
-				<div v-if="isPoliceMyTurn" class="flex">
-					<Cop v-for="(_, i) in bottomCopCount" :key="i" />
-				</div>
+		<!-- Block below board -->
+		<div class="flex flex-col items-center mt-10">
+			<div v-if="isThiefMyTurn && isThiefFirstMove && !isMoved">
+				<Thief />
 			</div>
-
-			<!-- Bottom button -->
-			<n-drawer :show="showBottomBtn" :show-mask="false" :mask-closable="false" :height="55" placement="bottom">
-				<n-button class="bottom-btn" @click="onClickBottomBtn">
-					{{ bottomBtnText }}
-				</n-button>
-			</n-drawer>
+			<div v-if="isPoliceMyTurn" class="flex">
+				<Cop v-for="(_, i) in bottomCopCount" :key="i" />
+			</div>
 		</div>
 
-		<!-- Game over state -->
-		<div v-if="gameState === 3" class="game-state">
-			<p class="title">{{ title }}</p>
-			<p class="subtitle">{{ subtitle }}</p>
-		</div>
+		<!-- Bottom button -->
+		<n-drawer :show="showBottomBtn" :show-mask="false" :mask-closable="false" :height="55" placement="bottom">
+			<n-button class="bottom-btn" @click="onClickBottomBtn">
+				{{ bottomBtnText }}
+			</n-button>
+		</n-drawer>
 	</div>
 </template>
 

@@ -32,7 +32,7 @@ const GameProps = {
 </script>
 
 <template>
-	<Game v-bind="GameProps" />
+	<GameInProgress v-bind="GameProps" />
 </template>
 
 <style lang="scss"></style>
