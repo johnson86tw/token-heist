@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { Ambushes, CopUsedCount, Countdown, GameState, Noticed, Player, PrizeMap, Role } from '~/types'
+import type { Ambushes, CopUsedCount, Countdown, GameState, Noticed, Paths, Player, PrizeMap, Role } from '~/types'
 
 const props = withDefaults(
 	defineProps<{
 		gameState: GameState
 		role: Role
 		currentRole: Role
+		paths: Paths
 		ambushes: Ambushes
 		copUsedCount: CopUsedCount
 		prizeMap: PrizeMap
@@ -16,14 +17,28 @@ const props = withDefaults(
 	{},
 )
 
+// --------------------- Thief ---------------------
+const isThiefFirstMove = computed(() => {
+	return props.paths.every(path => path[0] === -1 && path[1] === -1)
+})
+
+const thiefLastMove = computed(() => {
+	for (let i = 4; i >= 0; i--) {
+		if (props.paths[i][0] !== -1 && props.paths[i][1] !== -1) {
+			return props.paths[i]
+		}
+	}
+	return [-1, -1]
+})
+
 const isSpectator = computed(() => props.role === 0)
 const isThief = computed(() => props.role === 1)
 const isPolice = computed(() => props.role === 2)
 const isPlayer = computed(() => props.role !== 0)
 const isMyTurn = computed(() => props.currentRole === props.role)
-const isThiefTurn = computed(() => isThief.value && isMyTurn.value)
-const isPoliceTurn = computed(() => isPolice.value && isMyTurn.value)
-const isFirstMove = computed(() => props.copUsedCount === 0)
+const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
+const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
+const isPoliceFirstMove = computed(() => props.copUsedCount === 0)
 
 const title = computed(() => {
 	switch (props.gameState) {
@@ -73,15 +88,15 @@ function isRedCells(x: number, y: number) {
 
 	// find the adjacent cells of the lastAmbush
 	const cells = []
-	const adjacents = [
+	const moves = [
 		[1, 0],
 		[0, 1],
 		[-1, 0],
 		[0, -1],
 	]
 	for (let i = 0; i < 4; i++) {
-		const x = lastAmbush[0] + adjacents[i][0]
-		const y = lastAmbush[1] + adjacents[i][1]
+		const x = lastAmbush[0] + moves[i][0]
+		const y = lastAmbush[1] + moves[i][1]
 		if (x >= 0 && x < 3 && y >= 0 && y < 3) {
 			cells.push([x, y])
 		}
@@ -97,16 +112,36 @@ function isRedCells(x: number, y: number) {
 
 function isClickableCell(x: number, y: number) {
 	if (!isPlayer.value) return false
-	if (isThiefTurn.value) {
-		if (props.ambushes.some(ambush => ambush[0] === x && ambush[1] === y)) {
-			return false
-		}
+	// Cannot make move if there's already a cop there
+	if (props.ambushes.some(ambush => ambush[0] === x && ambush[1] === y)) {
+		return false
+	}
+	if (isPoliceMyTurn.value) {
 		return true
+	}
+	if (isThiefMyTurn.value) {
+		// thief can only move to adjacent cells
+		const moves = [
+			[1, 0],
+			[0, 1],
+			[-1, 0],
+			[0, -1],
+		]
+		for (let i = 0; i < 4; i++) {
+			const ax = thiefLastMove.value[0] + moves[i][0]
+			const ay = thiefLastMove.value[1] + moves[i][1]
+			if (ax >= 0 && ax < 3 && ay >= 0 && ay < 3) {
+				if (x === ax && y === ay) {
+					return true
+				}
+			}
+		}
+		return false
 	}
 	return false
 }
 
-const currentCopCount = computed(() => {
+const bottomCopCount = computed(() => {
 	if (isMoved.value) {
 		return props.copUsedCount - 1
 	}
@@ -125,14 +160,13 @@ const isMoved = ref(false)
 
 async function makeMove(x: number, y: number) {
 	if (!isPlayer.value) return
+	if (!isClickableCell(x, y)) return
 	// Return back if selected cell is the same as the current placement
 	if (placement.value[0] === x && placement.value[1] === y) {
 		placement.value = [-1, -1]
 		isMoved.value = false
 		return
 	}
-	// Cannot make move if there's already a cop there
-	if (props.ambushes.some(ambush => ambush[0] === x && ambush[1] === y)) return
 	placement.value = [x, y]
 	isMoved.value = true
 
@@ -151,8 +185,8 @@ async function makeMove(x: number, y: number) {
 
 const showBottomBtn = ref(false)
 const bottomBtnText = computed(() => {
-	if (isThiefTurn.value) return 'Sneak'
-	if (isPoliceTurn.value) return 'Dispatch'
+	if (isThiefMyTurn.value) return 'Sneak'
+	if (isPoliceMyTurn.value) return 'Dispatch'
 	return ''
 })
 
@@ -167,7 +201,7 @@ watch(isMoved, () => {
 
 <template>
 	<div>
-		<!-- Game in progress -->
+		<!-- Game in progress state -->
 		<div v-if="gameState === 1 || gameState === 2" class="game-state">
 			<div class="h-20">
 				<p class="title">{{ title }}</p>
@@ -178,24 +212,32 @@ watch(isMoved, () => {
 			<!-- Board -->
 			<div class="flex flex-col items-center">
 				<div v-for="(row, y) in board" :key="y" class="flex">
+					<!-- Cell -->
 					<div
 						v-for="(prize, x) in row"
 						:key="x"
 						class="relative border border-white w-20 h-20 flex items-center justify-center text-4xl"
 						:class="{
 							'bg-red-600 bg-opacity-40': isRedCells(x, y),
-							'cursor-pointer': isClickableCell(x, y),
-							'bg-gray-400 bg-opacity-40': isSelectedCell(x, y) && isPoliceTurn,
+							'hover:bg-gray-400 hover:bg-opacity-20 cursor-pointer': isClickableCell(x, y),
+							'bg-gray-400 bg-opacity-20': isSelectedCell(x, y) && isPlayer,
+							'bg-red-400 bg-opacity-20':
+								isThiefMyTurn && thiefLastMove[0] === x && thiefLastMove[1] === y,
 						}"
 						@click="makeMove(x, y)"
 					>
 						<!-- prize map -->
 						<p>{{ board[y][x] }}</p>
 
-						<!-- thief -->
-						<div ref="placementRef" v-if="isSelectedCell(x, y)" class="absolute">
-							<Thief v-if="isThiefTurn" class="opacity-60" />
-							<Cop v-if="isPoliceTurn" />
+						<!-- Selected cell -->
+						<div ref="placementRef" v-if="isPlayer && isSelectedCell(x, y)" class="absolute">
+							<Thief v-if="isThiefMyTurn" class="opacity-60" />
+							<Cop v-if="isPoliceMyTurn" />
+						</div>
+
+						<!-- thief's last move -->
+						<div v-if="isThiefMyTurn && !isThiefFirstMove && !isMoved" class="absolute">
+							<Thief v-if="x === thiefLastMove[0] && y === thiefLastMove[1]" class="opacity-60" />
 						</div>
 
 						<!-- ambushed cops -->
@@ -208,13 +250,13 @@ watch(isMoved, () => {
 				</div>
 			</div>
 
-			<!-- block below board -->
+			<!-- Block below board -->
 			<div class="flex flex-col items-center mt-10">
-				<div v-if="isThiefTurn && isFirstMove && !isMoved">
+				<div v-if="isThiefMyTurn && isThiefFirstMove && !isMoved">
 					<Thief />
 				</div>
-				<div v-if="isPoliceTurn" class="flex">
-					<Cop v-for="(_, i) in currentCopCount" :key="i" />
+				<div v-if="isPoliceMyTurn" class="flex">
+					<Cop v-for="(_, i) in bottomCopCount" :key="i" />
 				</div>
 			</div>
 
@@ -232,7 +274,7 @@ watch(isMoved, () => {
 			</n-drawer>
 		</div>
 
-		<!-- Game over -->
+		<!-- Game over state -->
 		<div v-if="gameState === 3" class="game-state">
 			<p class="title">{{ title }}</p>
 			<p class="subtitle">{{ subtitle }}</p>

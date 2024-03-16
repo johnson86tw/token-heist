@@ -6,6 +6,13 @@ const GameProps = {
 	gameState: 1,
 	role: 2,
 	currentRole: 2,
+	paths: [
+		[-1, -1],
+		[-1, -1],
+		[-1, -1],
+		[-1, -1],
+		[-1, -1],
+	],
 	ambushes: [
 		[1, 1],
 		[2, 2],
