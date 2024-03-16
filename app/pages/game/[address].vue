@@ -53,32 +53,19 @@ onUnmounted(() => {
 	tokenHeist.removeAllListeners()
 })
 
-const GameProps = {
-	gameState: gameStore.gameState,
-	userRole: gameStore.userRole,
-	currentRole: gameStore.currentRole,
-	paths: [
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-	] as [number, number][],
-	ambushes: [
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-	] as [number, number][],
-	copUsedCount: 0,
-	prizeMap: gameStore.prizeMap,
+const { gameState, userRole, currentRole, paths, ambushes, prizeMap } = storeToRefs(gameStore)
+
+const GameProps = reactive({
+	gameState,
+	userRole,
+	currentRole,
+	paths,
+	ambushes,
+	prizeMap,
 	countdown: dayjs().add(30, 'minute'), // skip temporarily
 	noticed: false, // get from sneak event
 	isTimeup: false, // skip temporarily
-}
-
-const { gameState } = storeToRefs(gameStore)
+})
 </script>
 
 <template>
