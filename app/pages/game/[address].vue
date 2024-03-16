@@ -18,7 +18,7 @@ const gameStore = useGameStore()
 
 onMounted(async () => {
 	try {
-		await gameStore.init(address)
+		gameStore.init(address)
 		await gameStore.fetchContractData()
 	} catch (err: any) {
 		message.error(err.message)
@@ -27,7 +27,7 @@ onMounted(async () => {
 })
 // ----------------------- feat: subscribe to events -----------------------
 
-watch([() => gameStore.initialized, () => gameStore.gameState], () => {
+watch([() => gameStore.gameState], () => {
 	console.log('watching initialized and gameState')
 	if (gameStore.gameState === GameState.NotStarted) {
 		const RegisterEventSet = new Set<string>()

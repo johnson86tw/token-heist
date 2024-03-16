@@ -176,7 +176,7 @@ function isSelectedCell(x: number, y: number) {
 // --------------------- Make move ---------------------
 
 const placementRef = ref()
-const placement = ref([-1, -1])
+const placement = ref<[number, number]>([-1, -1])
 const isMoved = ref(false)
 
 async function makeMove(x: number, y: number) {
@@ -244,11 +244,18 @@ const showBottomBtn = computed(() => {
 
 function onClickBottomBtn() {
 	if (bottomBtnText.value === Move.Sneak || bottomBtnText.value === Move.StayPut) {
-		// const newPath = props.paths
-		// gameStore.sneak()
-		console.log('sneak', placement.value)
+		let newPaths = props.paths
+		for (let i = 0; i < 4; i++) {
+			if (props.paths[i][0] === -1 && props.paths[i][1] === -1) {
+				newPaths[i] = placement.value
+				break
+			}
+		}
+		gameStore.sneak(newPaths)
+		console.log('sneak', newPaths)
 	}
 	if (bottomBtnText.value === Move.Dispatch) {
+		gameStore.dispatch(placement.value[0], placement.value[1])
 		console.log('dispatch', placement.value)
 	}
 	if (bottomBtnText.value === Move.TimeUp) {

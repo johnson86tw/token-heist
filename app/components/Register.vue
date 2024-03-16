@@ -37,12 +37,12 @@ async function onClickRegister(n: Player.Player1 | Player.Player2) {
 }
 
 const p1RegisterDisabled = computed(() => {
-	if (gameStore.initialized && !gameStore.player1) return false
+	if (gameStore.fetched && !gameStore.player1) return false
 	return true
 })
 
 const p2RegisterDisabled = computed(() => {
-	if (gameStore.initialized && !gameStore.player2) return false
+	if (gameStore.fetched && !gameStore.player2) return false
 	return true
 })
 

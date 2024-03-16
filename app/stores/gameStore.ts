@@ -13,7 +13,7 @@ export let signer: Wallet
 
 export const useGameStore = defineStore('GameStore', {
 	state: (): {
-		initialized: boolean
+		fetched: boolean
 		userAddress: string
 		tokenHeistAddress: string
 		gameState: GameState
@@ -25,7 +25,7 @@ export const useGameStore = defineStore('GameStore', {
 		ambushes: Ambushes
 		prizeMap: PrizeMap
 	} => ({
-		initialized: false,
+		fetched: false, // contract data first fetched
 		userAddress: '',
 		tokenHeistAddress: '',
 		gameState: 0,
@@ -76,7 +76,7 @@ export const useGameStore = defineStore('GameStore', {
 		},
 	},
 	actions: {
-		async init(tokenHeistAddress: string) {
+		init(tokenHeistAddress: string) {
 			if (!localStorage.getItem(LS_PRIVATE_KEY)) {
 				const hdNodeWallet = HDNodeWallet.createRandom()
 				localStorage.setItem(LS_PRIVATE_KEY, hdNodeWallet.privateKey)
@@ -90,18 +90,16 @@ export const useGameStore = defineStore('GameStore', {
 				throw new Error('Failed to initialize')
 			}
 
-			this.initialized = true
 			this.userAddress = signer.address
-
-			console.log('user', signer.address)
-
 			this.tokenHeistAddress = tokenHeistAddress
+
+			console.log(`%cuser ${signer.address}`, 'color: #90EE90;')
 		},
 		async fetchContractData() {
 			this.gameState = Number(await tokenHeist.gameState())
+
 			const p1Addr = await tokenHeist.player1() // may return 0x0000... if not set
 			const p2Addr = await tokenHeist.player2()
-
 			this.player1 = p1Addr === ZeroAddress ? '' : p1Addr
 			this.player2 = p2Addr === ZeroAddress ? '' : p2Addr
 
@@ -115,6 +113,7 @@ export const useGameStore = defineStore('GameStore', {
 			]
 			this.currentRole = Number(await tokenHeist.currentRole())
 			this.currentPlayer = await tokenHeist.currentPlayer()
+			this.fetched = true
 		},
 		async register(n: Player.Player1 | Player.Player2) {
 			const calldata = await genCalldata({

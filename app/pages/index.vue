@@ -6,7 +6,7 @@ import { useMessage } from 'naive-ui'
 
 const message = useMessage()
 
-const temp = '0xcDDa0FB1BE0019d9B38Ac9618254926958b40375'
+const temp = '0x2bb2F59B2F316e1Fd68616b83920A1fe15E32a81'
 
 // ----------------------- feat: lobby online count -----------------------
 
