@@ -35,8 +35,7 @@ export default defineNuxtConfig({
 			meta: [
 				{
 					name: 'viewport',
-					// Prevent a mobile browser screen from zooming in
-					content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0',
+					content: 'width=device-width, initial-scale=1.0, maximum-scale=1.0',
 				},
 				{
 					charset: 'utf-8',

@@ -5,6 +5,8 @@
 html {
 	overflow: hidden;
 	width: 100%;
+	// Disable double-tap zoom in browser on touch devices: https://stackoverflow.com/questions/10614481/disable-double-tap-zoom-option-in-browser-on-touch-devices
+	touch-action: manipulation;
 }
 
 body {
