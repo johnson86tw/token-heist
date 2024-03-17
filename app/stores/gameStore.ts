@@ -22,7 +22,6 @@ export const useGameStore = defineStore('GameStore', {
 		currentPlayer: string
 		player1: string
 		player2: string
-		paths: Paths
 		ambushes: Ambushes
 		prizeMap: PrizeMap
 	} => ({
@@ -34,13 +33,6 @@ export const useGameStore = defineStore('GameStore', {
 		currentPlayer: '',
 		player1: '',
 		player2: '',
-		paths: [
-			[-1, -1],
-			[-1, -1],
-			[-1, -1],
-			[-1, -1],
-			[-1, -1],
-		],
 		ambushes: [
 			[-1, -1],
 			[-1, -1],
@@ -69,11 +61,11 @@ export const useGameStore = defineStore('GameStore', {
 			}
 			return this.currentRole === Role.Police ? Role.Thief : Role.Police
 		},
-		lastPath(): [number, number] {
-			return findLastValidCell(this.paths)
-		},
 		lastAmbush(): [number, number] {
 			return findLastValidCell(this.ambushes)
+		},
+		isMyTurn(): boolean {
+			return this.currentPlayer === this.userAddress
 		},
 	},
 	actions: {
@@ -131,7 +123,7 @@ export const useGameStore = defineStore('GameStore', {
 		},
 		async sneak(paths: Paths) {
 			const input: CircuitInput = {
-				paths: paths,
+				paths,
 				ambushes: this.ambushes,
 			}
 			const { a, b, c, Input } = await exportCallDataBigInt(input)
@@ -158,13 +150,13 @@ export const useGameStore = defineStore('GameStore', {
 				body: calldata,
 			})
 		},
-		async reveal() {
+		async reveal(paths: Paths) {
 			const input: CircuitInput = {
-				paths: this.paths,
+				paths,
 				ambushes: this.ambushes,
 			}
 			const { a, b, c, Input } = await exportCallDataBigInt(input)
-			const flattenedPaths = flatten(this.paths).map(x => BigInt(x)) as [bigint, bigint, bigint, bigint, bigint]
+			const flattenedPaths = flatten(paths).map(x => BigInt(x)) as [bigint, bigint, bigint, bigint, bigint]
 			const calldata = await genCalldata({
 				tokenHeistAddress: this.tokenHeistAddress,
 				provider: provider,
@@ -176,5 +168,6 @@ export const useGameStore = defineStore('GameStore', {
 				body: calldata,
 			})
 		},
+		// TODO: timeup
 	},
 })

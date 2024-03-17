@@ -23,3 +23,4 @@ export const WS_RPC_URL = 'wss://arb-sepolia.g.alchemy.com/v2/ANLiQeZAwRkyUvxE8o
 
 export const LS_PRIVATE_KEY = 'token-heist-private-key'
 export const LS_CLIENT_ID = 'token-heist-client-id'
+export const LS_PATHS = 'token-heist-paths'

@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import type { ContractEventPayload } from 'ethers'
 import { useLoadingBar, useMessage } from 'naive-ui'
 import { tokenHeist } from '~/stores/gameStore'
-import { GameState, Player } from '~/types'
+import { GameState, Player, Role } from '~/types'
 
 const message = useMessage()
 const loadingBar = useLoadingBar()
@@ -29,23 +29,47 @@ onMounted(async () => {
 		loadingBar.finish()
 	}
 })
-// ----------------------- feat: subscribe to events -----------------------
+// ----------------------- Subscribe to events -----------------------
 
-watch([() => gameStore.gameState], () => {
-	console.log('Subscribing to events when gameState changed')
+watch([() => gameStore.fetched, () => gameStore.gameState], () => {
+	if (!gameStore.fetched) return
+
 	tokenHeist.removeAllListeners()
 
 	if (gameStore.gameState === GameState.NotStarted) {
+		console.log('Subscribing to Registered')
 		tokenHeist.on(tokenHeist.getEvent('Registered'), (address: string, event: any) => {
 			console.log('Event: Registered')
 			message.info(`${address} Registered`)
 			gameStore.fetchContractData()
 		})
 
+		console.log('Subscribing to GameStarted')
 		tokenHeist.on(tokenHeist.getEvent('GameStarted'), () => {
 			message.info('Game Started!')
 			gameStore.fetchContractData()
 		})
+	} else if (
+		gameStore.gameState === GameState.RoundOneInProgress ||
+		gameStore.gameState === GameState.RoundTwoInProgress
+	) {
+		if (gameStore.userRole === Role.Thief && !gameStore.isMyTurn) {
+			// if the user is a thief and it's not their turn, subscribe to Dispatch event
+			console.log('Subscribing to Dispatch')
+			tokenHeist.on(tokenHeist.getEvent('Dispatch'), () => {
+				gameStore.fetchContractData()
+			})
+		} else if (gameStore.userRole === Role.Police && !gameStore.isMyTurn) {
+			// if the user is a police and it's not their turn, subscribe to Sneak and Reveal events
+			console.log('Subscribing to Sneak')
+			tokenHeist.on(tokenHeist.getEvent('Sneak'), () => {
+				gameStore.fetchContractData()
+			})
+			console.log('Subscribing to Reveal')
+			tokenHeist.on(tokenHeist.getEvent('Reveal'), () => {
+				gameStore.fetchContractData()
+			})
+		}
 	}
 })
 
@@ -53,14 +77,14 @@ onUnmounted(() => {
 	tokenHeist.removeAllListeners()
 })
 
-const { fetched, gameState, userRole, currentRole, paths, ambushes, prizeMap } = storeToRefs(gameStore)
+const { fetched, gameState, userRole, currentRole, ambushes, prizeMap } = storeToRefs(gameStore)
 
 // Ensure that the ref is passed to the object wrapped by reactive to make the props reactive
 const GameProps = reactive({
+	tokenHeistAddress: address,
 	gameState,
 	userRole,
 	currentRole,
-	paths,
 	ambushes,
 	prizeMap,
 	countdown: dayjs().add(30, 'minute'), // skip temporarily

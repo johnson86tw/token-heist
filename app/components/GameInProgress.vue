@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import type { Ambushes, Countdown, GameState, Noticed, Paths, PrizeMap, Role } from '~/types'
 import { useMessage } from 'naive-ui'
+import { lsGetPaths, lsSetPaths } from '~/utils/localStorage'
+
+const message = useMessage()
 
 const props = withDefaults(
 	defineProps<{
+		tokenHeistAddress: string
 		gameState: GameState
 		userRole: Role
 		currentRole: Role
-		paths: Paths
 		ambushes: Ambushes
 		prizeMap: PrizeMap
 		countdown: Countdown
@@ -17,10 +20,6 @@ const props = withDefaults(
 	{},
 )
 
-const gameStore = useGameStore()
-
-// Check if the props are reasonable.
-
 const isSpectator = computed(() => props.userRole === 0)
 const isThief = computed(() => props.userRole === 1)
 const isPolice = computed(() => props.userRole === 2)
@@ -29,8 +28,29 @@ const isMyTurn = computed(() => props.currentRole === props.userRole)
 const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
 const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
 
+// get paths from local storage
+let paths: Paths = lsGetPaths(props.tokenHeistAddress) ?? [
+	[-1, -1],
+	[-1, -1],
+	[-1, -1],
+	[-1, -1],
+	[-1, -1],
+]
+
+// Check if game state is reasonable.
+// If there are ambushes, there should be paths
+if (
+	isThief.value &&
+	props.ambushes.some(a => a[0] !== -1 && a[1] !== -1) &&
+	paths.every(p => p[0] === -1 && p[1] === -1)
+) {
+	console.error('Invalid ambushes and paths', props.ambushes, paths)
+	message.error('Invalid ambushes and paths', {
+		duration: 0,
+	})
+}
+
 // --------------------- Notice ---------------------
-const message = useMessage()
 
 if (isPoliceMyTurn.value && props.noticed) {
 	message.info(
@@ -44,13 +64,13 @@ if (isPoliceMyTurn.value && props.noticed) {
 
 // --------------------- Thief ---------------------
 const isThiefFirstMove = computed(() => {
-	return props.paths.every(path => path[0] === -1 && path[1] === -1)
+	return paths.every(path => path[0] === -1 && path[1] === -1)
 })
 
 const thiefLastMove = computed(() => {
 	for (let i = 4; i >= 0; i--) {
-		if (props.paths[i][0] !== -1 && props.paths[i][1] !== -1) {
-			return props.paths[i]
+		if (paths[i][0] !== -1 && paths[i][1] !== -1) {
+			return paths[i]
 		}
 	}
 	return [-1, -1]
@@ -242,23 +262,53 @@ const showBottomBtn = computed(() => {
 	return !!bottomBtnText.value
 })
 
-function onClickBottomBtn() {
+const gameStore = useGameStore()
+
+const bottomBtnLoading = ref(false)
+
+async function onClickBottomBtn() {
 	if (bottomBtnText.value === Move.Sneak || bottomBtnText.value === Move.StayPut) {
-		let newPaths = props.paths
+		/**
+		 * ----------------- Sneak -----------------
+		 */
+		let newPaths = paths
 		for (let i = 0; i < 4; i++) {
-			if (props.paths[i][0] === -1 && props.paths[i][1] === -1) {
+			if (paths[i][0] === -1 && paths[i][1] === -1) {
 				newPaths[i] = placement.value
 				break
 			}
 		}
-		gameStore.sneak(newPaths)
-		console.log('sneak', newPaths)
-	}
-	if (bottomBtnText.value === Move.Dispatch) {
-		gameStore.dispatch(placement.value[0], placement.value[1])
-		console.log('dispatch', placement.value)
-	}
-	if (bottomBtnText.value === Move.TimeUp) {
+		try {
+			bottomBtnLoading.value = true
+			await gameStore.sneak(newPaths)
+			// store paths in local storage
+			lsSetPaths(props.tokenHeistAddress, newPaths)
+			console.log('sneak', newPaths)
+		} catch (err: any) {
+			console.error(err)
+			message.error(err.message)
+		} finally {
+			bottomBtnLoading.value = false
+		}
+	} else if (bottomBtnText.value === Move.Dispatch) {
+		/**
+		 * ----------------- Dispatch -----------------
+		 */
+
+		try {
+			bottomBtnLoading.value = true
+			await gameStore.dispatch(placement.value[0], placement.value[1])
+			console.log('dispatch', placement.value)
+		} catch (err: any) {
+			console.error(err)
+			message.error(err.message)
+		} finally {
+			bottomBtnLoading.value = false
+		}
+	} else if (bottomBtnText.value === Move.TimeUp) {
+		/**
+		 * ----------------- Timeup -----------------
+		 */
 		console.log('timeup')
 	}
 }
