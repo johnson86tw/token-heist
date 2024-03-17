@@ -18,7 +18,7 @@ const gameStore = useGameStore()
 
 onMounted(async () => {
 	try {
-		gameStore.init(address)
+		gameStore.initializeGame(address)
 		await gameStore.fetchContractData()
 	} catch (err: any) {
 		message.error(err.message)
@@ -28,24 +28,20 @@ onMounted(async () => {
 // ----------------------- feat: subscribe to events -----------------------
 
 watch([() => gameStore.gameState], () => {
-	console.log('watching initialized and gameState')
+	console.log('Subscribing to events when gameState changed')
+	tokenHeist.removeAllListeners()
+
 	if (gameStore.gameState === GameState.NotStarted) {
-		const RegisterEventSet = new Set<string>()
+		tokenHeist.on(tokenHeist.getEvent('Registered'), (address: string, event: any) => {
+			console.log('Event: Registered')
+			message.info(`${address} Registered`)
+			gameStore.fetchContractData()
+		})
 
-		// tokenHeist.on(tokenHeist.getEvent('Registered'), (address: string, event: any) => {
-		// 	console.log('Registered')
-		// 	const blockHash = event.log.blockHash
-		// 	if (RegisterEventSet.has(blockHash)) return
-		// 	RegisterEventSet.add(blockHash)
-
-		// 	message.info(`${address} Registered`)
-		// 	gameStore.fetchContractData()
-		// })
-
-		// tokenHeist.on(tokenHeist.getEvent('GameStarted'), () => {
-		// 	message.info('Game Started!')
-		// 	gameStore.fetchContractData()
-		// })
+		tokenHeist.on(tokenHeist.getEvent('GameStarted'), () => {
+			message.info('Game Started!')
+			gameStore.fetchContractData()
+		})
 	}
 })
 

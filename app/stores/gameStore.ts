@@ -3,7 +3,7 @@ import { Wallet, ZeroAddress, isAddress } from 'ethers'
 import type { Provider } from 'ethers'
 import { HDNodeWallet, ethers } from 'ethers'
 import { defineStore } from 'pinia'
-import { LS_PRIVATE_KEY, RPC_URL, getApiUrl } from '~/config'
+import { LS_PRIVATE_KEY, RPC_URL, WS_RPC_URL, getApiUrl } from '~/config'
 import { useHttp } from '~/core/http'
 import { Role, type Ambushes, type CircuitInput, type GameState, type Paths, Player, type PrizeMap } from '~/types'
 import { exportCallDataBigInt } from '~/utils/zkp'
@@ -77,13 +77,13 @@ export const useGameStore = defineStore('GameStore', {
 		},
 	},
 	actions: {
-		init(tokenHeistAddress: string) {
+		initializeGame(tokenHeistAddress: string) {
 			if (!localStorage.getItem(LS_PRIVATE_KEY)) {
 				const hdNodeWallet = HDNodeWallet.createRandom()
 				localStorage.setItem(LS_PRIVATE_KEY, hdNodeWallet.privateKey)
 			}
 			const privateKey = localStorage.getItem(LS_PRIVATE_KEY) as string
-			provider = new ethers.JsonRpcProvider(RPC_URL)
+			provider = new ethers.WebSocketProvider(WS_RPC_URL)
 			signer = new Wallet(privateKey, provider)
 			tokenHeist = TokenHeist__factory.connect(tokenHeistAddress, signer)
 
