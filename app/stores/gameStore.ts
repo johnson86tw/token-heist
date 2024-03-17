@@ -4,6 +4,7 @@ import type { Provider } from 'ethers'
 import { HDNodeWallet, ethers } from 'ethers'
 import { defineStore } from 'pinia'
 import { LS_PRIVATE_KEY, RPC_URL, getApiUrl } from '~/config'
+import { useHttp } from '~/core/http'
 import { Role, type Ambushes, type CircuitInput, type GameState, type Paths, Player, type PrizeMap } from '~/types'
 import { exportCallDataBigInt } from '~/utils/zkp'
 
@@ -122,8 +123,9 @@ export const useGameStore = defineStore('GameStore', {
 				signer: signer,
 				data: tokenHeist.interface.encodeFunctionData('register', [n]),
 			})
-			await $fetch(getApiUrl() + '/relay', {
-				method: 'POST',
+
+			const { httpPost } = useHttp()
+			await httpPost('/relay', {
 				body: calldata,
 			})
 		},
@@ -139,8 +141,8 @@ export const useGameStore = defineStore('GameStore', {
 				signer: signer,
 				data: tokenHeist.interface.encodeFunctionData('sneak', [a, b, c, Input]),
 			})
-			await $fetch(getApiUrl() + '/relay', {
-				method: 'POST',
+			const { httpPost } = useHttp()
+			await httpPost('/relay', {
 				body: calldata,
 			})
 		},
@@ -151,8 +153,8 @@ export const useGameStore = defineStore('GameStore', {
 				signer: signer,
 				data: tokenHeist.interface.encodeFunctionData('dispatch', [x, y]),
 			})
-			await $fetch(getApiUrl() + '/relay', {
-				method: 'POST',
+			const { httpPost } = useHttp()
+			await httpPost('/relay', {
 				body: calldata,
 			})
 		},
@@ -169,8 +171,8 @@ export const useGameStore = defineStore('GameStore', {
 				signer: signer,
 				data: tokenHeist.interface.encodeFunctionData('reveal', [flattenedPaths, a, b, c, Input]),
 			})
-			await $fetch(getApiUrl() + '/relay', {
-				method: 'POST',
+			const { httpPost } = useHttp()
+			await httpPost('/relay', {
 				body: calldata,
 			})
 		},

@@ -53,8 +53,9 @@ onUnmounted(() => {
 	tokenHeist.removeAllListeners()
 })
 
-const { gameState, userRole, currentRole, paths, ambushes, prizeMap } = storeToRefs(gameStore)
+const { fetched, gameState, userRole, currentRole, paths, ambushes, prizeMap } = storeToRefs(gameStore)
 
+// Ensure that the ref is passed to the object wrapped by reactive to make the props reactive
 const GameProps = reactive({
 	gameState,
 	userRole,
@@ -71,11 +72,13 @@ const GameProps = reactive({
 <template>
 	<ClientOnly>
 		<GameHeader />
-		<Register v-if="gameState === GameState.NotStarted" />
-		<GameInProgress
-			v-if="gameState === GameState.RoundOneInProgress || gameState === GameState.RoundTwoInProgress"
-			v-bind="GameProps"
-		/>
-		<GameOver v-if="gameState === GameState.Ended" />
+		<div v-if="fetched">
+			<Register v-if="gameState === GameState.NotStarted" />
+			<GameInProgress
+				v-if="gameState === GameState.RoundOneInProgress || gameState === GameState.RoundTwoInProgress"
+				v-bind="GameProps"
+			/>
+			<GameOver v-if="gameState === GameState.Ended" />
+		</div>
 	</ClientOnly>
 </template>
