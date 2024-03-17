@@ -13,7 +13,6 @@ export async function genCalldata(opt: Options) {
 	const { tokenHeistAddress, provider, signer, data } = opt
 	const tokenHeist = TokenHeist__factory.connect(tokenHeistAddress, signer)
 	const forwarderAddress = await tokenHeist.trustedForwarder()
-	console.log(forwarderAddress)
 
 	const domain = {
 		name: 'Token Heist',

@@ -5,7 +5,9 @@
 - dayjs https://day.js.org/docs/en/parse/string
 
 
+## Naming
 
+- last move -> [[1, 2], **[1, 0]**, [-1, -1], [-1, -1], [-1, -1]]
 
 
 ## Reference

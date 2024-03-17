@@ -146,13 +146,17 @@ function isRedCells(x: number, y: number) {
 
 function isClickableCell(x: number, y: number) {
 	if (!isPlayer.value) return false
+	if (bottomBtnLoading.value) return false
+
 	// Cannot make move if there's already a cop there
 	if (props.ambushes.some(ambush => ambush[0] === x && ambush[1] === y)) {
 		return false
 	}
+	// for police's turn
 	if (isPoliceMyTurn.value) {
 		return true
 	}
+	// for thief's turn
 	if (isThiefMyTurn.value) {
 		if (isThiefFirstMove.value) return true
 		// thief can stay put or move to adjacent cells
@@ -163,7 +167,7 @@ function isClickableCell(x: number, y: number) {
 			[-1, 0],
 			[0, -1],
 		]
-		for (let i = 0; i < 4; i++) {
+		for (let i = 0; i < 5; i++) {
 			const ax = thiefLastMove.value[0] + moves[i][0]
 			const ay = thiefLastMove.value[1] + moves[i][1]
 			if (ax >= 0 && ax < 3 && ay >= 0 && ay < 3) {
@@ -178,7 +182,6 @@ function isClickableCell(x: number, y: number) {
 }
 
 const bottomCopCount = computed(() => {
-	if (!isPoliceMyTurn.value) return 0
 	let copUsedCount = 5
 	for (let i = 4; i >= 0; i--) {
 		if (props.ambushes[i][0] !== -1 && props.ambushes[i][1] !== -1) {
@@ -284,6 +287,7 @@ async function onClickBottomBtn() {
 			// store paths in local storage
 			lsSetPaths(props.tokenHeistAddress, newPaths)
 			console.log('sneak', newPaths)
+			await gameStore.fetchContractData()
 		} catch (err: any) {
 			console.error(err)
 			message.error(err.message)
@@ -299,6 +303,7 @@ async function onClickBottomBtn() {
 			bottomBtnLoading.value = true
 			await gameStore.dispatch(placement.value[0], placement.value[1])
 			console.log('dispatch', placement.value)
+			await gameStore.fetchContractData()
 		} catch (err: any) {
 			console.error(err)
 			message.error(err.message)
@@ -349,7 +354,7 @@ async function onClickBottomBtn() {
 					</div>
 
 					<!-- thief's last move -->
-					<div v-if="isThiefMyTurn && !isThiefFirstMove && !isMoved" class="absolute">
+					<div v-if="isThief && !isThiefFirstMove && !isMoved" class="absolute">
 						<Thief v-if="x === thiefLastMove[0] && y === thiefLastMove[1]" class="opacity-60" />
 					</div>
 
@@ -368,14 +373,14 @@ async function onClickBottomBtn() {
 			<div v-if="isThiefMyTurn && isThiefFirstMove && !isMoved">
 				<Thief />
 			</div>
-			<div v-if="isPoliceMyTurn" class="flex">
+			<div v-if="!isThief" class="flex">
 				<Cop v-for="(_, i) in bottomCopCount" :key="i" />
 			</div>
 		</div>
 
 		<!-- Bottom button -->
 		<n-drawer :show="showBottomBtn" :show-mask="false" :mask-closable="false" :height="55" placement="bottom">
-			<n-button class="bottom-btn" @click="onClickBottomBtn">
+			<n-button class="bottom-btn" :loading="bottomBtnLoading" @click="onClickBottomBtn">
 				{{ bottomBtnText }}
 			</n-button>
 		</n-drawer>

@@ -38,10 +38,11 @@ const onRequestError: FetchOptions['onRequestError'] = ({ request, error, option
 const onResponseError: FetchOptions['onResponseError'] = ({ response }) => {
 	console.error('response: ', response)
 
+	// execution reverted 的文字太多，message 會印滿整個版面，暫時先不秀 api error message
 	// http error data
-	if (response._data) {
-		throw new Error(response._data)
-	}
+	// if (response._data) {
+	// 	throw new Error(JSON.stringify(response._data, null, 4))
+	// }
 
 	throw new Error(`${response.status} ${response.statusText}\n${response.url}`)
 }

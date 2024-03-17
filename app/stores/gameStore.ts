@@ -24,6 +24,7 @@ export const useGameStore = defineStore('GameStore', {
 		player2: string
 		ambushes: Ambushes
 		prizeMap: PrizeMap
+		noticed: boolean
 	} => ({
 		fetched: false, // contract data first fetched
 		userAddress: '',
@@ -42,6 +43,7 @@ export const useGameStore = defineStore('GameStore', {
 		],
 		// temporary not fetch from contract
 		prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
+		noticed: false,
 	}),
 	getters: {
 		userPlayerN(): Player {
@@ -67,8 +69,18 @@ export const useGameStore = defineStore('GameStore', {
 		isMyTurn(): boolean {
 			return this.currentPlayer === this.userAddress
 		},
+		currentPlayerN(): Player {
+			return isAddress(this.currentPlayer)
+				? this.currentPlayer === this.player1
+					? Player.Player1
+					: Player.Player2
+				: Player.None
+		},
 	},
 	actions: {
+		setNoticed(bool: boolean) {
+			this.noticed = bool
+		},
 		initializeGame(tokenHeistAddress: string) {
 			if (!localStorage.getItem(LS_PRIVATE_KEY)) {
 				const hdNodeWallet = HDNodeWallet.createRandom()
@@ -91,10 +103,13 @@ export const useGameStore = defineStore('GameStore', {
 		async fetchContractData() {
 			this.gameState = Number(await tokenHeist.gameState())
 
-			const p1Addr = await tokenHeist.player1() // may return 0x0000... if not set
-			const p2Addr = await tokenHeist.player2()
-			this.player1 = p1Addr === ZeroAddress ? '' : p1Addr
-			this.player2 = p2Addr === ZeroAddress ? '' : p2Addr
+			// 先檢查是否已經有 player1, player2，避免每次取資料角色都會變動
+			if (this.player1 === '' || this.player2 === '') {
+				const p1Addr = await tokenHeist.player1() // may return 0x0000... if not set
+				const p2Addr = await tokenHeist.player2()
+				this.player1 = p1Addr === ZeroAddress ? '' : p1Addr
+				this.player2 = p2Addr === ZeroAddress ? '' : p2Addr
+			}
 
 			const flattenedAmbushes = (await tokenHeist.flattenedAmbushes()).map(x => Number(x))
 			this.ambushes = [
@@ -107,6 +122,9 @@ export const useGameStore = defineStore('GameStore', {
 			this.currentRole = Number(await tokenHeist.currentRole())
 			this.currentPlayer = await tokenHeist.currentPlayer()
 			this.fetched = true
+
+			// TODO: 取得最新的 event log，如果是 sneak，檢查有無 noticed，否則 noticed 皆為 false
+			this.setNoticed(false)
 		},
 		async register(n: Player.Player1 | Player.Player2) {
 			const calldata = await genCalldata({
