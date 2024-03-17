@@ -8,7 +8,10 @@ import 'hardhat-gas-reporter'
 dotenv.config()
 const PRIVATE_KEY = process.env.PRIVATE_KEY
 
-const accounts = PRIVATE_KEY ? [PRIVATE_KEY] : undefined
+const accounts = PRIVATE_KEY ? [PRIVATE_KEY] : []
+if (process.env.PRIVATE_KEY_PLAYER_1) {
+	accounts.push(process.env.PRIVATE_KEY_PLAYER_1)
+}
 
 const config: HardhatUserConfig = {
 	solidity: {
