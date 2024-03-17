@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Ambushes, Countdown, GameState, Noticed, Paths, PrizeMap, Role } from '~/types'
+import { Role, type Ambushes, type Countdown, type GameState, type Noticed, type Paths, type PrizeMap } from '~/types'
 import { useMessage } from 'naive-ui'
 import { lsGetPaths, lsSetPaths } from '~/utils/localStorage'
 
@@ -16,67 +16,16 @@ const props = withDefaults(
 		countdown: Countdown
 		noticed: Noticed
 		isTimeup: boolean
+		sneak: (paths: Paths) => Promise<void>
+		dispatch: (x: number, y: number) => Promise<void>
+		reveal: (paths: Paths) => Promise<void>
 	}>(),
 	{},
 )
 
-const isSpectator = computed(() => props.userRole === 0)
-const isThief = computed(() => props.userRole === 1)
-const isPolice = computed(() => props.userRole === 2)
-const isPlayer = computed(() => props.userRole === 1 || props.userRole === 2)
-const isMyTurn = computed(() => props.currentRole === props.userRole)
-const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
-const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
-
-// get paths from local storage
-let paths: Paths = lsGetPaths(props.tokenHeistAddress) ?? [
-	[-1, -1],
-	[-1, -1],
-	[-1, -1],
-	[-1, -1],
-	[-1, -1],
-]
-
-// Check if game state is reasonable.
-// If there are ambushes, there should be paths
-if (
-	isThief.value &&
-	props.ambushes.some(a => a[0] !== -1 && a[1] !== -1) &&
-	paths.every(p => p[0] === -1 && p[1] === -1)
-) {
-	console.error('Invalid ambushes and paths', props.ambushes, paths)
-	message.error('Invalid ambushes and paths', {
-		duration: 0,
-	})
-}
-
-// --------------------- Notice ---------------------
-
-if (isPoliceMyTurn.value && props.noticed) {
-	message.info(
-		'The previous cop found the thief nearby! Note that they may stay put in the red cell or have already left.',
-		{
-			closable: true,
-			duration: 0,
-		},
-	)
-}
-
-// --------------------- Thief ---------------------
-const isThiefFirstMove = computed(() => {
-	return paths.every(path => path[0] === -1 && path[1] === -1)
-})
-
-const thiefLastMove = computed(() => {
-	for (let i = 4; i >= 0; i--) {
-		if (paths[i][0] !== -1 && paths[i][1] !== -1) {
-			return paths[i]
-		}
-	}
-	return [-1, -1]
-})
-
-// --------------------- Block above board ---------------------
+const emit = defineEmits<{
+	(e: 'reload'): void
+}>()
 
 const title = computed(() => {
 	switch (props.gameState) {
@@ -95,6 +44,105 @@ const subtitle = computed(() => {
 			return isMyTurn.value ? "It's your turn to catch" : "It's police's turn"
 	}
 })
+
+// ------------------------------------------ Paths in local storage ------------------------------------------
+
+const paths = ref<Paths>(
+	lsGetPaths(props.tokenHeistAddress) ?? [
+		[-1, -1],
+		[-1, -1],
+		[-1, -1],
+		[-1, -1],
+		[-1, -1],
+	],
+)
+
+// ------------------------------------------ Computed ------------------------------------------
+
+const isSpectator = computed(() => props.userRole === 0)
+const isThief = computed(() => props.userRole === 1)
+const isPolice = computed(() => props.userRole === 2)
+const isPlayer = computed(() => props.userRole === 1 || props.userRole === 2)
+const isMyTurn = computed(() => props.currentRole === props.userRole)
+const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
+const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
+
+const isThiefFirstMove = computed(() => {
+	return paths.value.every(path => path[0] === -1 && path[1] === -1)
+})
+
+const thiefLastMove = computed(() => findLastValidCell(paths.value))
+const policeLastMove = computed(() => findLastValidCell(props.ambushes))
+
+const bottomCopCount = computed(() => {
+	let copUsedCount = 5
+	for (let i = 4; i >= 0; i--) {
+		if (props.ambushes[i][0] !== -1 && props.ambushes[i][1] !== -1) {
+			copUsedCount--
+		}
+	}
+	if (isMoved.value) return copUsedCount - 1
+	return copUsedCount
+})
+
+// ------------------------------------------ Auto Reveal Condition ------------------------------------------
+
+watch(
+	() => props.ambushes,
+	async () => {
+		if (isThiefMyTurn.value) {
+			if (
+				policeLastMove.value[0] === thiefLastMove.value[0] &&
+				policeLastMove.value[1] === thiefLastMove.value[1]
+			) {
+				// 1. thief is caught
+				try {
+					await props.reveal(paths.value)
+				} catch (err: any) {
+					console.error(err)
+					message.error(err.message)
+				}
+			} else if (props.ambushes[4][0] !== -1 && props.ambushes[4][1] !== -1) {
+				// 2. ambushes are used up
+				try {
+					await props.reveal(paths.value)
+				} catch (err: any) {
+					console.error(err)
+					message.error(err.message)
+				}
+			}
+		}
+	},
+	{
+		deep: true,
+		immediate: true,
+	},
+)
+
+// ------------------------------------------ Component Validation: check if game state is reasonable ------------------------------------------
+// If there are ambushes, there should be paths
+if (
+	isThief.value &&
+	props.ambushes.some(a => a[0] !== -1 && a[1] !== -1) &&
+	paths.value.every(p => p[0] === -1 && p[1] === -1)
+) {
+	console.error('Invalid ambushes and paths', props.ambushes, paths)
+	message.error('Invalid ambushes and paths', {
+		duration: 0,
+	})
+}
+
+// ------------------------------------------ Noticed ------------------------------------------
+
+if (isPoliceMyTurn.value && props.noticed) {
+	message.info(
+		'The previous cop found the thief nearby! Note that they may stay put in the red cell or have already left.',
+		{
+			closable: true,
+			duration: 0,
+		},
+	)
+}
 
 // --------------------- Board ---------------------
 
@@ -181,17 +229,6 @@ function isClickableCell(x: number, y: number) {
 	return false
 }
 
-const bottomCopCount = computed(() => {
-	let copUsedCount = 5
-	for (let i = 4; i >= 0; i--) {
-		if (props.ambushes[i][0] !== -1 && props.ambushes[i][1] !== -1) {
-			copUsedCount--
-		}
-	}
-	if (isMoved.value) return copUsedCount - 1
-	return copUsedCount
-})
-
 function isSelectedCell(x: number, y: number) {
 	return placement.value[0] === x && placement.value[1] === y
 }
@@ -265,8 +302,6 @@ const showBottomBtn = computed(() => {
 	return !!bottomBtnText.value
 })
 
-const gameStore = useGameStore()
-
 const bottomBtnLoading = ref(false)
 
 async function onClickBottomBtn() {
@@ -274,25 +309,31 @@ async function onClickBottomBtn() {
 		/**
 		 * ----------------- Sneak -----------------
 		 */
-		let newPaths = paths
-		for (let i = 0; i < 4; i++) {
-			if (paths[i][0] === -1 && paths[i][1] === -1) {
-				newPaths[i] = placement.value
+		let newPaths = paths.value.slice()
+		console.log('newPaths', newPaths)
+		for (let i = 0; i < 5; i++) {
+			if (paths.value[i][0] === -1 && paths.value[i][1] === -1) {
+				newPaths[i] = toValue(placement.value)
 				break
 			}
 		}
 		try {
 			bottomBtnLoading.value = true
-			await gameStore.sneak(newPaths)
-			// store paths in local storage
+			await props.sneak(newPaths)
+			// Successfull sneak
+			// update paths and the paths in local storage
+			paths.value = newPaths
 			lsSetPaths(props.tokenHeistAddress, newPaths)
-			console.log('sneak', newPaths)
-			await gameStore.fetchContractData()
+
+			console.log('sneak', paths.value)
+			emit('reload')
 		} catch (err: any) {
 			console.error(err)
 			message.error(err.message)
 		} finally {
 			bottomBtnLoading.value = false
+			isMoved.value = false
+			placement.value = [-1, -1]
 		}
 	} else if (bottomBtnText.value === Move.Dispatch) {
 		/**
@@ -301,19 +342,22 @@ async function onClickBottomBtn() {
 
 		try {
 			bottomBtnLoading.value = true
-			await gameStore.dispatch(placement.value[0], placement.value[1])
+			await props.dispatch(placement.value[0], placement.value[1])
 			console.log('dispatch', placement.value)
-			await gameStore.fetchContractData()
+			emit('reload')
 		} catch (err: any) {
 			console.error(err)
 			message.error(err.message)
 		} finally {
 			bottomBtnLoading.value = false
+			isMoved.value = false
+			placement.value = [-1, -1]
 		}
 	} else if (bottomBtnText.value === Move.TimeUp) {
 		/**
 		 * ----------------- Timeup -----------------
 		 */
+		// TODO: handle timeup
 		console.log('timeup')
 	}
 }
