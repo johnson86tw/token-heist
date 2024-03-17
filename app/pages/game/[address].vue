@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import type { ContractEventPayload } from 'ethers'
-import { useMessage } from 'naive-ui'
+import { useLoadingBar, useMessage } from 'naive-ui'
 import { tokenHeist } from '~/stores/gameStore'
 import { GameState, Player } from '~/types'
 
 const message = useMessage()
+const loadingBar = useLoadingBar()
 
 // Get the contract address from the URL
 const route = useRoute()
@@ -18,11 +19,14 @@ const gameStore = useGameStore()
 
 onMounted(async () => {
 	try {
+		loadingBar.start()
 		gameStore.initializeGame(address)
 		await gameStore.fetchContractData()
 	} catch (err: any) {
 		message.error(err.message)
 		return
+	} finally {
+		loadingBar.finish()
 	}
 })
 // ----------------------- feat: subscribe to events -----------------------
