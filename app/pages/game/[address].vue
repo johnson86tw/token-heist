@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { useMessage } from 'naive-ui'
-import { Player } from '~/types'
+import type { ContractEventPayload } from 'ethers'
+import { useLoadingBar, useMessage } from 'naive-ui'
+import { tokenHeist } from '~/stores/gameStore'
+import { GameState, Player, Role } from '~/types'
 
 const message = useMessage()
+const loadingBar = useLoadingBar()
 
 // Get the contract address from the URL
 const route = useRoute()
@@ -12,48 +15,94 @@ if (!address) {
 	navigateTo('/')
 }
 
-const contractStore = useContractStore()
+const gameStore = useGameStore()
 
-if (process.client) {
-	await contractStore.init(address)
-}
+onMounted(async () => {
+	try {
+		loadingBar.start()
+		gameStore.initializeGame(address)
+		await gameStore.fetchContractData()
+	} catch (err: any) {
+		message.error(err.message)
+		return
+	} finally {
+		loadingBar.finish()
+	}
+})
+// ----------------------- Subscribe to events -----------------------
 
-const { gameState } = storeToRefs(contractStore)
+watch([() => gameStore.fetched, () => gameStore.gameState], () => {
+	if (!gameStore.fetched) return
 
-const GameProps = {
-	gameState: 1,
-	role: 1,
-	currentRole: 1,
-	paths: [
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-	],
-	ambushes: [
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-	],
-	copUsedCount: 0,
-	prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
-	countdown: dayjs().add(30, 'minute'),
-	winner: Player.Player1,
-	noticed: false,
-	isTimeup: false,
-	loading: false,
-	bottomBtnLoading: false,
-}
+	tokenHeist.removeAllListeners()
+
+	if (gameStore.gameState === GameState.NotStarted) {
+		console.log('Subscribing to Registered')
+		tokenHeist.on(tokenHeist.getEvent('Registered'), (address: string, event: any) => {
+			console.log('Event: Registered')
+			message.info(`${address} Registered`)
+			gameStore.fetchContractData()
+		})
+
+		console.log('Subscribing to GameStarted')
+		tokenHeist.on(tokenHeist.getEvent('GameStarted'), () => {
+			message.info('Game Started!')
+			gameStore.fetchContractData()
+		})
+	} else if (
+		gameStore.gameState === GameState.RoundOneInProgress ||
+		gameStore.gameState === GameState.RoundTwoInProgress
+	) {
+		if (gameStore.userRole === Role.Thief && !gameStore.isMyTurn) {
+			// if the user is a thief and it's not their turn, subscribe to Dispatch event
+			console.log('Subscribing to Dispatch')
+			tokenHeist.on(tokenHeist.getEvent('Dispatch'), () => {
+				gameStore.fetchContractData()
+			})
+		} else if (gameStore.userRole === Role.Police && !gameStore.isMyTurn) {
+			// if the user is a police and it's not their turn, subscribe to Sneak and Reveal events
+			console.log('Subscribing to Sneak')
+			tokenHeist.on(tokenHeist.getEvent('Sneak'), () => {
+				gameStore.fetchContractData()
+			})
+			console.log('Subscribing to Reveal')
+			tokenHeist.on(tokenHeist.getEvent('Reveal'), () => {
+				gameStore.fetchContractData()
+			})
+		}
+	}
+})
+
+onUnmounted(() => {
+	tokenHeist.removeAllListeners()
+})
+
+const { fetched, gameState, userRole, currentRole, ambushes, prizeMap } = storeToRefs(gameStore)
+
+// Ensure that the ref is passed to the object wrapped by reactive to make the props reactive
+const GameProps = reactive({
+	tokenHeistAddress: address,
+	gameState,
+	userRole,
+	currentRole,
+	ambushes,
+	prizeMap,
+	countdown: dayjs().add(30, 'minute'), // skip temporarily
+	noticed: false, // get from sneak event
+	isTimeup: false, // skip temporarily
+})
 </script>
 
 <template>
 	<ClientOnly>
 		<GameHeader />
-		<Register v-if="gameState === 0" />
-		<GameInProgress v-if="gameState === 1 || gameState === 2" v-bind="GameProps" />
-		<GameOver v-if="gameState === 3" />
+		<div v-if="fetched">
+			<Register v-if="gameState === GameState.NotStarted" />
+			<GameInProgress
+				v-if="gameState === GameState.RoundOneInProgress || gameState === GameState.RoundTwoInProgress"
+				v-bind="GameProps"
+			/>
+			<GameOver v-if="gameState === GameState.Ended" />
+		</div>
 	</ClientOnly>
 </template>

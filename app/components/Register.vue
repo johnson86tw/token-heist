@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { useMessage } from 'naive-ui'
-import { getApiUrl } from '~/config'
-import { genCalldata } from '~/utils/relay'
-import type { ContractEventPayload } from 'ethers'
+import type { Player } from '~/types'
 
 // Get the contract address from the URL
 const route = useRoute()
@@ -13,47 +11,19 @@ if (!address) {
 
 const message = useMessage()
 
-// ----------------------- feat: contract -----------------------
-
-// subscribe to events
-const RegisterEventSet = new Set<string>()
-// @ts-ignore
-tokenHeist.on('Registered', (address: string, event: ContractEventPayload) => {
-	const blockHash = event.log.blockHash
-	if (RegisterEventSet.has(blockHash)) return
-
-	message.info(`${address} Registered`)
-	RegisterEventSet.add(blockHash)
-})
-
-onUnmounted(() => {
-	tokenHeist.removeAllListeners()
-})
-
 // ----------------------- feat: register -----------------------
+
+const gameStore = useGameStore()
 
 const player1Registering = ref(false)
 const player2Registering = ref(false)
 
-async function register(n: number) {
-	const calldata = await genCalldata({
-		tokenHeistAddress: address,
-		provider: provider,
-		signer: signer,
-		data: tokenHeist.interface.encodeFunctionData('register', [n]),
-	})
-	await $fetch(getApiUrl() + '/relay', {
-		method: 'POST',
-		body: calldata,
-	})
-}
-
-async function onClickRegister(n: number) {
+async function onClickRegister(n: Player.Player1 | Player.Player2) {
 	try {
 		if (n === 1) player1Registering.value = true
 		if (n === 2) player2Registering.value = true
 		if (n !== 1 && n !== 2) throw new Error('Invalid player number')
-		await register(n)
+		await gameStore.register(n)
 	} catch (err: any) {
 		message.error(err.message, {
 			closable: true,
@@ -65,13 +35,30 @@ async function onClickRegister(n: number) {
 		if (n === 2) player2Registering.value = false
 	}
 }
+
+const p1RegisterDisabled = computed(() => {
+	if (gameStore.fetched && !gameStore.player1) return false
+	return true
+})
+
+const p2RegisterDisabled = computed(() => {
+	if (gameStore.fetched && !gameStore.player2) return false
+	return true
+})
+
+const { player1, player2 } = storeToRefs(gameStore)
 </script>
 
 <template>
 	<n-space justify="center" class="p-4 mt-16">
 		<div class="flex flex-col gap-4">
-			<n-button :loading="player1Registering" @click="onClickRegister(1)">Register as Player 1</n-button>
-			<n-button :loading="player2Registering" @click="onClickRegister(2)">Register as Player 2</n-button>
+			<n-button :loading="player1Registering" :disabled="p1RegisterDisabled" @click="onClickRegister(1)">
+				{{ player1 ? 'Player 1 Registered' : 'Register as Player 1' }}
+			</n-button>
+
+			<n-button :loading="player2Registering" :disabled="p2RegisterDisabled" @click="onClickRegister(2)">
+				{{ player2 ? 'Player 2 Registered' : 'Register as Player 2' }}
+			</n-button>
 		</div>
 	</n-space>
 </template>

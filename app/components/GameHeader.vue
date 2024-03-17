@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Channel, type SSRoomCount, type ServerSendMsg } from '@token-heist/backend/src/types/socketTypes'
 import { ws, sendRoomCount } from '~/core/websocket'
+import { Player } from '~/types'
+
+const gameStore = useGameStore()
 
 // Get the contract address from the URL
 const route = useRoute()
@@ -11,7 +14,7 @@ if (!address) {
 
 const showTips = ref(false)
 
-const { player1, player2 } = storeToRefs(useContractStore())
+const { player1, player2 } = storeToRefs(useGameStore())
 
 // ----------------------- feat: lobby online count -----------------------
 
@@ -37,50 +40,80 @@ onUnmounted(() => {
 })
 
 // ----------------------- feat: countdown -----------------------
-const countdownActive1 = ref(false)
-const countdownActive2 = ref(false)
+const player1CountdownActive = computed(() => {
+	return gameStore.currentPlayerN === Player.Player1
+})
+const player2CountdownActive = computed(() => {
+	return gameStore.currentPlayerN === Player.Player2
+})
+
+const { userPlayerN } = storeToRefs(gameStore)
 </script>
 
 <template>
 	<div class="p-3 pb-0 flex justify-between">
 		<div>
 			<div
-				class="flex items-center gap-1"
+				class="flex items-center gap-2"
 				:class="{
 					'opacity-60': !player1,
 				}"
 			>
-				<div class="mr-1">Player 1</div>
+				<div
+					:class="{
+						'text-teal-300': userPlayerN === 1,
+					}"
+				>
+					Player 1
+				</div>
 				<Thief width="18" height="18" />
-				<n-countdown
-					v-if="countdownActive1"
-					:render="
-						({ minutes, seconds }) => {
-							return [h('span', [String(minutes)]), ':', h('span', [String(seconds).padStart(2, '0')])]
-						}
-					"
-					:duration="180000"
-					:active="countdownActive1"
-				/>
+				<div>
+					<n-countdown
+						v-if="player1CountdownActive"
+						:render="
+							({ minutes, seconds }) => {
+								return [
+									h('span', [String(minutes)]),
+									':',
+									h('span', [String(seconds).padStart(2, '0')]),
+								]
+							}
+						"
+						:duration="180000"
+						:active="player1CountdownActive"
+					/>
+				</div>
 			</div>
 			<div
-				class="flex items-center gap-1"
+				class="flex items-center gap-2"
 				:class="{
 					'opacity-60': !player2,
 				}"
 			>
-				<div class="mr-1">Player 2</div>
+				<div
+					:class="{
+						'text-teal-300': userPlayerN === 2,
+					}"
+				>
+					Player 2
+				</div>
 				<Cop width="16" height="16" />
-				<n-countdown
-					v-if="countdownActive2"
-					:render="
-						({ minutes, seconds }) => {
-							return [h('span', [String(minutes)]), ':', h('span', [String(seconds).padStart(2, '0')])]
-						}
-					"
-					:duration="180000"
-					:active="countdownActive2"
-				/>
+				<div>
+					<n-countdown
+						v-if="player2CountdownActive"
+						:render="
+							({ minutes, seconds }) => {
+								return [
+									h('span', [String(minutes)]),
+									':',
+									h('span', [String(seconds).padStart(2, '0')]),
+								]
+							}
+						"
+						:duration="180000"
+						:active="player2CountdownActive"
+					/>
+				</div>
 			</div>
 		</div>
 

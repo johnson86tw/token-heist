@@ -35,7 +35,9 @@ await useFetch(getApiUrl(), {
 <template>
 	<n-config-provider :theme="darkTheme" :theme-overrides="themeOverrides">
 		<n-message-provider container-class="px-3">
-			<NuxtPage />
+			<n-loading-bar-provider>
+				<NuxtPage />
+			</n-loading-bar-provider>
 		</n-message-provider>
 	</n-config-provider>
 </template>

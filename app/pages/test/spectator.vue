@@ -4,7 +4,7 @@ import { Player } from '~/types'
 
 const GameProps = {
 	gameState: 1,
-	role: 0,
+	userRole: 0,
 	currentRole: 1,
 	paths: [
 		[-1, -1],
@@ -12,22 +12,18 @@ const GameProps = {
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
-	],
+	] as [number, number][],
 	ambushes: [
 		[1, 1],
 		[2, 1],
 		[-1, -1],
 		[-1, -1],
 		[-1, -1],
-	],
-	copUsedCount: 1,
+	] as [number, number][],
 	prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
 	countdown: dayjs().add(30, 'minute'),
-	winner: Player.Player1,
 	noticed: false,
 	isTimeup: false,
-	loading: false,
-	bottomBtnLoading: false,
 }
 </script>
 

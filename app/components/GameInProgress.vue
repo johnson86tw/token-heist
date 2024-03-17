@@ -1,40 +1,56 @@
 <script setup lang="ts">
-import type { Ambushes, CopUsedCount, Countdown, GameState, Noticed, Paths, Player, PrizeMap, Role } from '~/types'
+import type { Ambushes, Countdown, GameState, Noticed, Paths, PrizeMap, Role } from '~/types'
 import { useMessage } from 'naive-ui'
+import { lsGetPaths, lsSetPaths } from '~/utils/localStorage'
+
+const message = useMessage()
 
 const props = withDefaults(
 	defineProps<{
+		tokenHeistAddress: string
 		gameState: GameState
-		role: Role
+		userRole: Role
 		currentRole: Role
-		paths: Paths
 		ambushes: Ambushes
-		copUsedCount: CopUsedCount
 		prizeMap: PrizeMap
 		countdown: Countdown
-		winner: Player
 		noticed: Noticed
 		isTimeup: boolean
-		loading: boolean
-		bottomBtnLoading: boolean
 	}>(),
 	{},
 )
 
-// Check if the props are reasonable.
-
-const emit = defineEmits(['sneak', 'dispatch', 'timeup'])
-
-const isSpectator = computed(() => props.role === 0)
-const isThief = computed(() => props.role === 1)
-const isPolice = computed(() => props.role === 2)
-const isPlayer = computed(() => props.role === 1 || props.role === 2)
-const isMyTurn = computed(() => props.currentRole === props.role)
+const isSpectator = computed(() => props.userRole === 0)
+const isThief = computed(() => props.userRole === 1)
+const isPolice = computed(() => props.userRole === 2)
+const isPlayer = computed(() => props.userRole === 1 || props.userRole === 2)
+const isMyTurn = computed(() => props.currentRole === props.userRole)
 const isThiefMyTurn = computed(() => isThief.value && isMyTurn.value)
 const isPoliceMyTurn = computed(() => isPolice.value && isMyTurn.value)
 
+// get paths from local storage
+let paths: Paths = lsGetPaths(props.tokenHeistAddress) ?? [
+	[-1, -1],
+	[-1, -1],
+	[-1, -1],
+	[-1, -1],
+	[-1, -1],
+]
+
+// Check if game state is reasonable.
+// If there are ambushes, there should be paths
+if (
+	isThief.value &&
+	props.ambushes.some(a => a[0] !== -1 && a[1] !== -1) &&
+	paths.every(p => p[0] === -1 && p[1] === -1)
+) {
+	console.error('Invalid ambushes and paths', props.ambushes, paths)
+	message.error('Invalid ambushes and paths', {
+		duration: 0,
+	})
+}
+
 // --------------------- Notice ---------------------
-const message = useMessage()
 
 if (isPoliceMyTurn.value && props.noticed) {
 	message.info(
@@ -48,13 +64,13 @@ if (isPoliceMyTurn.value && props.noticed) {
 
 // --------------------- Thief ---------------------
 const isThiefFirstMove = computed(() => {
-	return props.paths.every(path => path[0] === -1 && path[1] === -1)
+	return paths.every(path => path[0] === -1 && path[1] === -1)
 })
 
 const thiefLastMove = computed(() => {
 	for (let i = 4; i >= 0; i--) {
-		if (props.paths[i][0] !== -1 && props.paths[i][1] !== -1) {
-			return props.paths[i]
+		if (paths[i][0] !== -1 && paths[i][1] !== -1) {
+			return paths[i]
 		}
 	}
 	return [-1, -1]
@@ -130,13 +146,17 @@ function isRedCells(x: number, y: number) {
 
 function isClickableCell(x: number, y: number) {
 	if (!isPlayer.value) return false
+	if (bottomBtnLoading.value) return false
+
 	// Cannot make move if there's already a cop there
 	if (props.ambushes.some(ambush => ambush[0] === x && ambush[1] === y)) {
 		return false
 	}
+	// for police's turn
 	if (isPoliceMyTurn.value) {
 		return true
 	}
+	// for thief's turn
 	if (isThiefMyTurn.value) {
 		if (isThiefFirstMove.value) return true
 		// thief can stay put or move to adjacent cells
@@ -147,7 +167,7 @@ function isClickableCell(x: number, y: number) {
 			[-1, 0],
 			[0, -1],
 		]
-		for (let i = 0; i < 4; i++) {
+		for (let i = 0; i < 5; i++) {
 			const ax = thiefLastMove.value[0] + moves[i][0]
 			const ay = thiefLastMove.value[1] + moves[i][1]
 			if (ax >= 0 && ax < 3 && ay >= 0 && ay < 3) {
@@ -162,9 +182,14 @@ function isClickableCell(x: number, y: number) {
 }
 
 const bottomCopCount = computed(() => {
-	if (!isPoliceMyTurn.value) return 0
-	if (isMoved.value) return props.copUsedCount - 1
-	return props.copUsedCount
+	let copUsedCount = 5
+	for (let i = 4; i >= 0; i--) {
+		if (props.ambushes[i][0] !== -1 && props.ambushes[i][1] !== -1) {
+			copUsedCount--
+		}
+	}
+	if (isMoved.value) return copUsedCount - 1
+	return copUsedCount
 })
 
 function isSelectedCell(x: number, y: number) {
@@ -174,7 +199,7 @@ function isSelectedCell(x: number, y: number) {
 // --------------------- Make move ---------------------
 
 const placementRef = ref()
-const placement = ref([-1, -1])
+const placement = ref<[number, number]>([-1, -1])
 const isMoved = ref(false)
 
 async function makeMove(x: number, y: number) {
@@ -240,15 +265,56 @@ const showBottomBtn = computed(() => {
 	return !!bottomBtnText.value
 })
 
-function onClickBottomBtn() {
+const gameStore = useGameStore()
+
+const bottomBtnLoading = ref(false)
+
+async function onClickBottomBtn() {
 	if (bottomBtnText.value === Move.Sneak || bottomBtnText.value === Move.StayPut) {
-		emit('sneak', placement.value)
-	}
-	if (bottomBtnText.value === Move.Dispatch) {
-		emit('dispatch', placement.value)
-	}
-	if (bottomBtnText.value === Move.TimeUp) {
-		emit('timeup')
+		/**
+		 * ----------------- Sneak -----------------
+		 */
+		let newPaths = paths
+		for (let i = 0; i < 4; i++) {
+			if (paths[i][0] === -1 && paths[i][1] === -1) {
+				newPaths[i] = placement.value
+				break
+			}
+		}
+		try {
+			bottomBtnLoading.value = true
+			await gameStore.sneak(newPaths)
+			// store paths in local storage
+			lsSetPaths(props.tokenHeistAddress, newPaths)
+			console.log('sneak', newPaths)
+			await gameStore.fetchContractData()
+		} catch (err: any) {
+			console.error(err)
+			message.error(err.message)
+		} finally {
+			bottomBtnLoading.value = false
+		}
+	} else if (bottomBtnText.value === Move.Dispatch) {
+		/**
+		 * ----------------- Dispatch -----------------
+		 */
+
+		try {
+			bottomBtnLoading.value = true
+			await gameStore.dispatch(placement.value[0], placement.value[1])
+			console.log('dispatch', placement.value)
+			await gameStore.fetchContractData()
+		} catch (err: any) {
+			console.error(err)
+			message.error(err.message)
+		} finally {
+			bottomBtnLoading.value = false
+		}
+	} else if (bottomBtnText.value === Move.TimeUp) {
+		/**
+		 * ----------------- Timeup -----------------
+		 */
+		console.log('timeup')
 	}
 }
 
@@ -288,12 +354,12 @@ function onClickBottomBtn() {
 					</div>
 
 					<!-- thief's last move -->
-					<div v-if="isThiefMyTurn && !isThiefFirstMove && !isMoved" class="absolute">
+					<div v-if="isThief && !isThiefFirstMove && !isMoved" class="absolute">
 						<Thief v-if="x === thiefLastMove[0] && y === thiefLastMove[1]" class="opacity-60" />
 					</div>
 
 					<!-- ambushed cops -->
-					<div v-for="(ambush, i) in ambushes" :key="i" class="absolute">
+					<div v-for="(ambush, i) in props.ambushes" :key="i" class="absolute">
 						<div v-if="x === ambush[0] && y === ambush[1]">
 							<Cop />
 						</div>
@@ -307,14 +373,14 @@ function onClickBottomBtn() {
 			<div v-if="isThiefMyTurn && isThiefFirstMove && !isMoved">
 				<Thief />
 			</div>
-			<div v-if="isPoliceMyTurn" class="flex">
+			<div v-if="!isThief" class="flex">
 				<Cop v-for="(_, i) in bottomCopCount" :key="i" />
 			</div>
 		</div>
 
 		<!-- Bottom button -->
 		<n-drawer :show="showBottomBtn" :show-mask="false" :mask-closable="false" :height="55" placement="bottom">
-			<n-button class="bottom-btn" @click="onClickBottomBtn">
+			<n-button class="bottom-btn" :loading="bottomBtnLoading" @click="onClickBottomBtn">
 				{{ bottomBtnText }}
 			</n-button>
 		</n-drawer>

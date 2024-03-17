@@ -12,7 +12,7 @@ declare module 'nuxt/schema' {
 export {}
 
 export enum Role {
-	Spectator,
+	None,
 	Thief,
 	Police,
 }
@@ -31,10 +31,14 @@ export enum GameState {
 }
 
 export type PrizeMap = [number, number, number, number, number, number, number, number, number] | number[]
-export type Ambushes =
-	| number[][]
-	| [[number, number], [number, number], [number, number], [number, number], [number, number]]
-export type Paths = Ambushes
 export type CopUsedCount = number
 export type Countdown = Dayjs
 export type Noticed = boolean
+
+export type CircuitInput = {
+	paths: [number, number][]
+	ambushes: [number, number][]
+}
+
+export type Ambushes = CircuitInput['ambushes']
+export type Paths = CircuitInput['paths']

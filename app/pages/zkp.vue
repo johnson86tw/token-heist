@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ethers, Interface } from 'ethers'
+import type { CircuitInput } from '~/types'
 
 const provider = new ethers.JsonRpcProvider('https://rpc.ankr.com/eth_sepolia')
 
