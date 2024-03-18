@@ -1,23 +1,34 @@
-import { LS_PATHS } from '~/config'
 import type { Paths } from '~/types'
 
-export function lsGetPaths(address: string): Paths | null {
-	try {
-		const lsPaths = localStorage.getItem(LS_PATHS)
-		const parsed = lsPaths && JSON.parse(lsPaths)
-		if (parsed.address === address) {
-			return parsed.paths
-		}
-	} catch (e: any) {
-		return null
-	}
-	return null
-}
+export const LS_PRIVATE_KEY = 'token-heist-private-key'
+export const LS_CLIENT_ID = 'token-heist-client-id'
+export const LS_PATHS = 'token-heist-paths'
 
-export function lsSetPaths(address: string, paths: Paths) {
-	try {
-		localStorage.setItem(LS_PATHS, JSON.stringify({ address, paths }))
-	} catch (e: any) {
-		console.error('Failed to set LS_PATHS', e)
+// TODO: store LS_PRIVATE_KEY and LS_CLIENT_ID in the same key
+export function useLsUser() {}
+
+export function useLsPaths(address: string) {
+	const store = useLocalStorage(LS_PATHS, {
+		[address]: [
+			[-1, -1],
+			[-1, -1],
+			[-1, -1],
+			[-1, -1],
+			[-1, -1],
+		],
+	})
+
+	function setPaths(newPaths: Paths) {
+		store.value[address] = newPaths
+	}
+
+	function removePaths(address: string) {
+		delete store.value[address]
+	}
+
+	return {
+		paths: computed(() => store.value[address] as [number, number][]),
+		setPaths,
+		removePaths,
 	}
 }

@@ -5,7 +5,7 @@ import {
 	type CSLobbyCount,
 	type CSRoomCount,
 } from '@token-heist/backend/src/types/socketTypes'
-import { getWebsocketUrl, LS_CLIENT_ID } from '../config'
+import { getWebsocketUrl } from '../config'
 
 export let ws: WebSocket
 export let clientId: string

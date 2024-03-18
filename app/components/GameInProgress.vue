@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Role, type Ambushes, type Countdown, type GameState, type Noticed, type Paths, type PrizeMap } from '~/types'
 import { useMessage } from 'naive-ui'
-import { lsGetPaths, lsSetPaths } from '~/utils/localStorage'
 
 const message = useMessage()
 
@@ -47,15 +46,7 @@ const subtitle = computed(() => {
 
 // ------------------------------------------ Paths in local storage ------------------------------------------
 
-const paths = ref<Paths>(
-	lsGetPaths(props.tokenHeistAddress) ?? [
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-		[-1, -1],
-	],
-)
+const { paths, setPaths } = useLsPaths(props.tokenHeistAddress)
 
 // ------------------------------------------ Computed ------------------------------------------
 
@@ -320,10 +311,9 @@ async function onClickBottomBtn() {
 		try {
 			bottomBtnLoading.value = true
 			await props.sneak(newPaths)
+
 			// Successfull sneak
-			// update paths and the paths in local storage
-			paths.value = newPaths
-			lsSetPaths(props.tokenHeistAddress, newPaths)
+			setPaths(newPaths)
 
 			console.log('sneak', paths.value)
 			emit('reload')

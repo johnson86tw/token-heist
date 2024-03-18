@@ -20,7 +20,3 @@ export const RPC_URL = 'https://sepolia-rollup.arbitrum.io/rpc'
 // export const RPC_URL = 'https://public.stackup.sh/api/v1/node/arbitrum-sepolia'
 // export const RPC_URL = 'https://arbitrum-sepolia.blockpi.network/v1/rpc/public'
 export const WS_RPC_URL = 'wss://arb-sepolia.g.alchemy.com/v2/ANLiQeZAwRkyUvxE8oEJX35rJV2QSW1D'
-
-export const LS_PRIVATE_KEY = 'token-heist-private-key'
-export const LS_CLIENT_ID = 'token-heist-client-id'
-export const LS_PATHS = 'token-heist-paths'
