@@ -36,13 +36,16 @@ const onRequestError: FetchOptions['onRequestError'] = ({ request, error, option
 }
 
 const onResponseError: FetchOptions['onResponseError'] = ({ response }) => {
-	console.error('response: ', response)
-
 	// execution reverted 的文字太多，message 會印滿整個版面，暫時先不秀 api error message
 	// http error data
-	// if (response._data) {
-	// 	throw new Error(JSON.stringify(response._data, null, 4))
-	// }
+	if (response._data && response._data.error) {
+		// skip the transaction object in the error message
+		let errorMessage = response._data.error
+		errorMessage = errorMessage.replace(/transaction=\{[^}]*\}/, 'transaction={...}')
 
+		console.error('response: ', response._data)
+		throw new Error(errorMessage)
+	}
+	console.error('response: ', response)
 	throw new Error(`${response.status} ${response.statusText}\n${response.url}`)
 }
