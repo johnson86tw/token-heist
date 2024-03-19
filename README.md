@@ -10,5 +10,14 @@
 - If all five cops are deployed without catching the thief, the game ends, and the thief wins.
 
 
+## Circuit Scheme
+
+<img src="https://github.com/chnejohnson/token-heist/blob/main/docs/scheme.png" alt="Circuit Scheme" style="max-width:100%;" width="800">
+
+## Flow and Process
+<img src="https://github.com/chnejohnson/token-heist/blob/main/docs/flow.png" alt="Flow" style="max-width:100%;" width="700">
+<img src="https://github.com/chnejohnson/token-heist/blob/main/docs/process.png" alt="Process" style="max-width:100%;" width="600">
+
+
 ## Image Attribution
 - "Money Heist Mask PNG Free Image" by [Rojal](https://www.pngall.com/money-heist-tv-series-png/), licensed under CC BY-NC 4.0. Image source: [Link](https://www.pngall.com/money-heist-tv-series-png/download/54638)
