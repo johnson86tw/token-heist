@@ -14,7 +14,7 @@ export async function deployFixture() {
 	// deploy PoseidonT6
 	try {
 		if ((await owner.provider.getCode(PoseidonT6.proxyAddress)) === '0x') {
-			console.log('no proxy')
+			console.log('deploying PoseidonT6.proxy')
 			// fund the keyless account
 			await owner.sendTransaction({
 				to: PoseidonT6.from,
@@ -27,10 +27,14 @@ export async function deployFixture() {
 
 		// Then deploy the hasher, if needed
 		if ((await owner.provider.getCode(PoseidonT6.address)) === '0x') {
+			console.log('deploying PoseidonT6')
 			await owner.sendTransaction({
 				to: PoseidonT6.proxyAddress,
 				data: PoseidonT6.data,
 			})
+			console.log('Poseidon deployed to:', PoseidonT6.address)
+		} else {
+			console.log('PoseidonT6 already deployed to:', PoseidonT6.address)
 		}
 	} catch (err) {
 		console.error('Failed to deploy PoseidonT6:', err)

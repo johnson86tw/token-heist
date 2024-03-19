@@ -54,6 +54,9 @@ contract TokenHeist is ERC2771Context {
         prizeMap = _prizeMap;
         timeLimitPerTurn = _timeLimitPerTurn;
         timeUpPoints = _timeUpPoints;
+
+        // verify linked poseidon library
+        if (hashCommitment([int8(1), int8(1), int8(1), int8(1), int8(1)]) == 0) revert PoseidonT6NotLinked();
     }
 
     address public player1;
@@ -299,6 +302,7 @@ contract TokenHeist is ERC2771Context {
     }
 
     // ================================ Errors ================================
+    error PoseidonT6NotLinked();
     error HasRegistered(Role);
     error InvalidProof();
     error InvalidCommitment();
@@ -353,7 +357,7 @@ contract TokenHeist is ERC2771Context {
         return true;
     }
 
-    function hashCommitment(int8[5] calldata _coordinates) public pure returns (uint256) {
+    function hashCommitment(int8[5] memory _coordinates) public pure returns (uint256) {
         uint256 negativeOne = 21888242871839275222246405745257275088548364400416034343698204186575808495616;
         return PoseidonT6.hash(
             [

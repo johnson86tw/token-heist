@@ -10,9 +10,10 @@ async function main() {
 	const [deployer] = await ethers.getSigners()
 	console.log('Deployer:', deployer.address)
 
+	// deploy PoseidonT6
 	try {
 		if ((await deployer.provider.getCode(PoseidonT6.proxyAddress)) === '0x') {
-			console.log('deploying proxy')
+			console.log('deploying PoseidonT6.proxy')
 			// fund the keyless account
 			await deployer.sendTransaction({
 				to: PoseidonT6.from,
@@ -30,12 +31,13 @@ async function main() {
 				to: PoseidonT6.proxyAddress,
 				data: PoseidonT6.data,
 			})
+			console.log('Poseidon deployed to:', PoseidonT6.address)
+		} else {
+			console.log('PoseidonT6 already deployed to:', PoseidonT6.address)
 		}
 	} catch (err) {
 		console.error('Failed to deploy PoseidonT6:', err)
 	}
-
-	console.log('Poseidon deployed to:', PoseidonT6.address)
 
 	// Save deployment
 	const filePath = path.join(__dirname, '../deployment', `${network.name}.json`)
