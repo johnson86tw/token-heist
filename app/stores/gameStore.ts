@@ -3,7 +3,7 @@ import { Wallet, ZeroAddress, isAddress } from 'ethers'
 import type { Provider } from 'ethers'
 import { HDNodeWallet, ethers } from 'ethers'
 import { defineStore } from 'pinia'
-import { LS_PRIVATE_KEY, RPC_URL, WS_RPC_URL, getApiUrl } from '~/config'
+import { WS_RPC_URL } from '~/config'
 import { useHttp } from '~/core/http'
 import { Role, type Ambushes, type CircuitInput, type GameState, type Paths, Player, type PrizeMap } from '~/types'
 import { exportCallDataBigInt } from '~/utils/zkp'
@@ -112,13 +112,13 @@ export const useGameStore = defineStore('GameStore', {
 			}
 
 			const flattenedAmbushes = (await tokenHeist.flattenedAmbushes()).map(x => Number(x))
-			this.ambushes = [
-				[flattenedAmbushes[0], flattenedAmbushes[1]],
-				[flattenedAmbushes[2], flattenedAmbushes[3]],
-				[flattenedAmbushes[4], flattenedAmbushes[5]],
-				[flattenedAmbushes[6], flattenedAmbushes[7]],
-				[flattenedAmbushes[8], flattenedAmbushes[9]],
-			]
+
+			this.ambushes[0] = [flattenedAmbushes[0], flattenedAmbushes[1]]
+			this.ambushes[1] = [flattenedAmbushes[2], flattenedAmbushes[3]]
+			this.ambushes[2] = [flattenedAmbushes[4], flattenedAmbushes[5]]
+			this.ambushes[3] = [flattenedAmbushes[6], flattenedAmbushes[7]]
+			this.ambushes[4] = [flattenedAmbushes[8], flattenedAmbushes[9]]
+
 			this.currentRole = Number(await tokenHeist.currentRole())
 			this.currentPlayer = await tokenHeist.currentPlayer()
 			this.fetched = true
@@ -140,6 +140,7 @@ export const useGameStore = defineStore('GameStore', {
 			})
 		},
 		async sneak(paths: Paths) {
+			console.log('gameStore.sneak', paths)
 			const input: CircuitInput = {
 				paths,
 				ambushes: this.ambushes,
@@ -157,6 +158,7 @@ export const useGameStore = defineStore('GameStore', {
 			})
 		},
 		async dispatch(x: number, y: number) {
+			console.log('gameStore.dispatch', x, y)
 			const calldata = await genCalldata({
 				tokenHeistAddress: this.tokenHeistAddress,
 				provider: provider,
@@ -169,6 +171,7 @@ export const useGameStore = defineStore('GameStore', {
 			})
 		},
 		async reveal(paths: Paths) {
+			console.log('gameStore.reveal', paths)
 			const input: CircuitInput = {
 				paths,
 				ambushes: this.ambushes,

@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import type { ContractEventPayload } from 'ethers'
 import { useLoadingBar, useMessage } from 'naive-ui'
 import { tokenHeist } from '~/stores/gameStore'
-import { GameState, Player, Role } from '~/types'
+import { GameState, Role } from '~/types'
 
 const message = useMessage()
 const loadingBar = useLoadingBar()
@@ -30,8 +29,9 @@ onMounted(async () => {
 	}
 })
 // ----------------------- Subscribe to events -----------------------
+// currentPlayer: for running the watcher in each turn
 
-watch([() => gameStore.fetched, () => gameStore.gameState], () => {
+watch([() => gameStore.fetched, () => gameStore.gameState, () => gameStore.currentPlayer], () => {
 	if (!gameStore.fetched) return
 
 	tokenHeist.removeAllListeners()
@@ -61,6 +61,8 @@ watch([() => gameStore.fetched, () => gameStore.gameState], () => {
 			})
 		} else if (gameStore.userRole === Role.Police && !gameStore.isMyTurn) {
 			// if the user is a police and it's not their turn, subscribe to Sneak and Reveal events
+
+			// TODO: No need to subscribe to Sneak when the cops are all used up
 			console.log('Subscribing to Sneak')
 			tokenHeist.on(tokenHeist.getEvent('Sneak'), () => {
 				gameStore.fetchContractData()
@@ -90,6 +92,9 @@ const GameProps = reactive({
 	countdown: dayjs().add(30, 'minute'), // skip temporarily
 	noticed: false, // get from sneak event
 	isTimeup: false, // skip temporarily
+	sneak: gameStore.sneak,
+	dispatch: gameStore.dispatch,
+	reveal: gameStore.reveal,
 })
 </script>
 
@@ -101,6 +106,7 @@ const GameProps = reactive({
 			<GameInProgress
 				v-if="gameState === GameState.RoundOneInProgress || gameState === GameState.RoundTwoInProgress"
 				v-bind="GameProps"
+				@reload="gameStore.fetchContractData"
 			/>
 			<GameOver v-if="gameState === GameState.Ended" />
 		</div>
