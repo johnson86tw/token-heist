@@ -84,6 +84,8 @@ watch(
 		if (isThiefMyTurn.value) {
 			try {
 				if (
+					thiefLastMove.value[0] !== -1 &&
+					thiefLastMove.value[1] !== -1 &&
 					policeLastMove.value[0] === thiefLastMove.value[0] &&
 					policeLastMove.value[1] === thiefLastMove.value[1]
 				) {
