@@ -94,7 +94,7 @@ const showTips = ref(false)
 			</div>
 		</div>
 
-		<!-- content -->
+		<!-- addresses -->
 		<ClientOnly>
 			<div class="p-4 flex flex-col items-center">
 				<div class="flex flex-col justify-center gap-2">
