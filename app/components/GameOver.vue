@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { useLoadingBar, useMessage } from 'naive-ui'
 import { tokenHeist } from '~/stores/gameStore'
-// const props = withDefaults(
-// 	defineProps<{
-// 		winner: Player
-// 	}>(),
-// 	{},
-// )
-// const subtitle = 'Player ${props.winner} wins!'
+import { Player } from '~/types'
 
 const message = useMessage()
 const loadingBar = useLoadingBar()
@@ -26,11 +20,23 @@ onMounted(async () => {
 		loadingBar.start()
 		player1Score.value = Number(await tokenHeist.scores(0))
 		player2Score.value = Number(await tokenHeist.scores(1))
+		console.log('player1Score', player1Score.value)
+		console.log('player2Score', player2Score.value)
 	} catch (err: any) {
 		console.error(err)
 		message.error(err.message)
 	} finally {
 		loadingBar.finish()
+	}
+})
+
+const winner = computed<Player>(() => {
+	if (player1Score.value > player2Score.value) {
+		return Player.Player1
+	} else if (player1Score.value < player2Score.value) {
+		return Player.Player2
+	} else {
+		return Player.None
 	}
 })
 </script>
@@ -50,9 +56,10 @@ onMounted(async () => {
 		<div class="flex flex-col justify-center gap-2">
 			<div class="flex flex-col items-center">
 				<p class="title">Game Over</p>
-				<p class="subtitle">Player 1 wins!</p>
+				<p v-if="winner" class="subtitle">Player {{ winner }} wins!</p>
 
-				<div class="flex flex-col item-center">
+				<div class="mt-5 flex flex-col item-center">
+					<p class="text-center">Scores</p>
 					<p>Player 1: {{ player1Score }}</p>
 					<p>Player 2: {{ player2Score }}</p>
 				</div>
