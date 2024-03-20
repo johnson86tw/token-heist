@@ -18,6 +18,7 @@ const gameStore = useGameStore()
 
 onMounted(async () => {
 	try {
+		// bug: [Vue warn]: Slot "default" invoked outside of the render function https://stackoverflow.com/questions/75803408/how-to-clear-slot-default-invoked-outside-of-the-render-function-warning-vu
 		loadingBar.start()
 		gameStore.initializeGame(address)
 		await gameStore.fetchContractData()

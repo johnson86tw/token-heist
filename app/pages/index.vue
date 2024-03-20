@@ -54,6 +54,10 @@ async function onClickCreateGame() {
 }
 
 const showTips = ref(false)
+
+function shortenAddress(address: string) {
+	return `${address.slice(0, 6)}...${address.slice(-4)}`
+}
 </script>
 
 <template>
@@ -97,14 +101,16 @@ const showTips = ref(false)
 		<!-- addresses -->
 		<ClientOnly>
 			<div class="p-4 flex flex-col items-center">
-				<div class="flex flex-col justify-center gap-2">
+				<div class="mb-5 flex flex-col justify-center gap-2">
 					<n-button :loading="loading" @click="onClickCreateGame">Create New Game</n-button>
 				</div>
 
-				<div class="mt-5 flex flex-col items-center" v-for="address in addresses" :key="address">
-					<NuxtLink :to="`/game/${address}`" class="">
-						{{ address }}
-					</NuxtLink>
+				<div class="mt-5 flex gap-2 items-center" v-for="address in addresses" :key="address">
+					<div>
+						{{ shortenAddress(address) }}
+					</div>
+					<n-button size="tiny" @click="navigateTo(`/game/${address}`)">Enter</n-button>
+					<n-button size="tiny" @click="removeAddress(address)">Remove</n-button>
 				</div>
 			</div>
 		</ClientOnly>

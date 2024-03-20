@@ -25,6 +25,8 @@ export const useGameStore = defineStore('GameStore', {
 		ambushes: Ambushes
 		prizeMap: PrizeMap
 		noticed: boolean
+		player1Role: Role
+		player2Role: Role
 	} => ({
 		fetched: false, // contract data first fetched
 		userAddress: '',
@@ -44,6 +46,8 @@ export const useGameStore = defineStore('GameStore', {
 		// temporary not fetch from contract
 		prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
 		noticed: false,
+		player1Role: Role.None,
+		player2Role: Role.None,
 	}),
 	getters: {
 		userPlayerN(): Player {
@@ -121,6 +125,15 @@ export const useGameStore = defineStore('GameStore', {
 
 			this.currentRole = Number(await tokenHeist.currentRole())
 			this.currentPlayer = await tokenHeist.currentPlayer()
+
+			if (this.currentPlayer === this.player1) {
+				this.player1Role = this.currentRole
+				this.player2Role = this.currentRole === Role.Police ? Role.Thief : Role.Police
+			} else if (this.currentPlayer === this.player2) {
+				this.player2Role = this.currentRole
+				this.player1Role = this.currentRole === Role.Police ? Role.Thief : Role.Police
+			}
+
 			this.fetched = true
 
 			// TODO: 取得最新的 event log，如果是 sneak，檢查有無 noticed，否則 noticed 皆為 false
