@@ -30,6 +30,9 @@ async function main() {
 			[] as [number, number][],
 		),
 	)
+	const player1Score = await tokenHeist.scores(0)
+	const player2Score = await tokenHeist.scores(1)
+	console.log(player1Score, player2Score)
 }
 
 main().catch(error => {
