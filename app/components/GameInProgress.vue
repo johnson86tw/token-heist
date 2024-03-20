@@ -17,7 +17,7 @@ const props = withDefaults(
 		isTimeup: boolean
 		sneak: (paths: Paths) => Promise<void>
 		dispatch: (x: number, y: number) => Promise<void>
-		reveal: (paths: Paths) => Promise<void>
+		reveal: (paths: Paths, defeated?: boolean) => Promise<void>
 	}>(),
 	{},
 )
@@ -90,7 +90,8 @@ watch(
 					policeLastMove.value[1] === thiefLastMove.value[1]
 				) {
 					// 1. thief is caught
-					await props.reveal(paths.value)
+
+					await props.reveal(paths.value, true)
 				} else if (props.ambushes[4][0] !== -1 && props.ambushes[4][1] !== -1) {
 					// 2. ambushes are used up and thief is not caught
 					await props.reveal(paths.value)

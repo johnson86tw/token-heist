@@ -183,12 +183,13 @@ export const useGameStore = defineStore('GameStore', {
 				body: calldata,
 			})
 		},
-		async reveal(paths: Paths) {
-			console.log('gameStore.reveal', paths)
+		async reveal(paths: Paths, defeated: boolean = false) {
 			const input: CircuitInput = {
 				paths,
-				ambushes: this.ambushes,
+				// thief admits defeat by sending a valid proof with valid commitment but invalid ambushes
+				ambushes: defeated ? Array(5).fill([-1, -1]) : this.ambushes,
 			}
+			console.log('gameStore.reveal', input.paths, input.ambushes, defeated)
 			const { a, b, c, Input } = await exportCallDataBigInt(input)
 			const flattenedPaths = flatten(paths).map(x => BigInt(x)) as [bigint, bigint, bigint, bigint, bigint]
 			const calldata = await genCalldata({
