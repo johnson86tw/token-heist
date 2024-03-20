@@ -38,6 +38,10 @@ export function useLsPaths(address: string) {
 		],
 	})
 
+	if (!store.value[address]) {
+		store.value[address] = Array(5).fill([-1, -1])
+	}
+
 	function setPaths(newPaths: Paths) {
 		store.value[address] = newPaths
 	}

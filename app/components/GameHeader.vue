@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Channel, type SSRoomCount, type ServerSendMsg } from '@token-heist/backend/src/types/socketTypes'
 import { ws, sendRoomCount } from '~/core/websocket'
-import { Player, Role } from '~/types'
+import { GameState, Player, Role } from '~/types'
 
 const gameStore = useGameStore()
 
@@ -47,12 +47,16 @@ const player2CountdownActive = computed(() => {
 	return gameStore.currentPlayerN === Player.Player2
 })
 
-const { userPlayerN, player1Role, player2Role } = storeToRefs(gameStore)
+const { userPlayerN, player1Role, player2Role, gameState } = storeToRefs(gameStore)
 </script>
 
 <template>
-	<div class="p-3 pb-0 flex justify-between">
+	<div
+		v-if="gameState === GameState.RoundOneInProgress || gameState === GameState.RoundTwoInProgress"
+		class="p-3 pb-0 flex justify-between"
+	>
 		<div>
+			<!-- player 1 -->
 			<div
 				class="flex items-center gap-2"
 				:class="{
@@ -85,6 +89,7 @@ const { userPlayerN, player1Role, player2Role } = storeToRefs(gameStore)
 					/>
 				</div>
 			</div>
+			<!-- player 2 -->
 			<div
 				class="flex items-center gap-2"
 				:class="{

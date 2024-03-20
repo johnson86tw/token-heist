@@ -59,6 +59,8 @@ const showTips = ref(false)
 function shortenAddress(address: string) {
 	return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
+
+const reversedAddresses = computed(() => addresses.value.slice().reverse())
 </script>
 
 <template>
@@ -106,7 +108,7 @@ function shortenAddress(address: string) {
 					<n-button :loading="loading" @click="onClickCreateGame">Create New Game</n-button>
 				</div>
 
-				<div class="mt-5 flex gap-2 items-center" v-for="address in addresses" :key="address">
+				<div class="mt-5 flex gap-2 items-center" v-for="address in reversedAddresses" :key="address">
 					<div>
 						{{ shortenAddress(address) }}
 					</div>
