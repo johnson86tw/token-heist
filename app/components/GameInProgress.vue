@@ -81,6 +81,8 @@ const bottomCopCount = computed(() => {
 watch(
 	() => props.ambushes,
 	async () => {
+		// why this watch will be kept triggering?
+		// console.log('watch ambushes')
 		if (isThiefMyTurn.value) {
 			try {
 				if (

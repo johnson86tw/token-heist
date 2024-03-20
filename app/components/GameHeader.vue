@@ -140,9 +140,7 @@ const { userPlayerN, player1Role, player2Role, gameState } = storeToRefs(gameSto
 
 		<n-drawer v-model:show="showTips" :height="200" placement="top">
 			<n-drawer-content title="Tips">
-				<ul class="list-disc px-5">
-					<li>Each game consists of two rounds, with players taking turns being the thief and the police.</li>
-				</ul>
+				<Tips />
 			</n-drawer-content>
 		</n-drawer>
 	</div>
