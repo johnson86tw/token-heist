@@ -1,23 +1,23 @@
 import { Express } from 'express'
 import { ethers, Wallet } from 'ethers'
 import { TokenHeist__factory } from '@token-heist/contracts/typechain-types'
-import { FORWARDER_ADDRESS, logger, PRIVATE_KEY, VERIFIER_ADDRESS } from '../config'
+import { FORWARDER_ADDRESS, logger, PRIVATE_KEY, RPC_URL, VERIFIER_ADDRESS } from '../config'
 
 const POSEIDON_T6_ADDRESS = '0x666333F371685334CdD69bdDdaFBABc87CE7c7Db'
 
 export default (app: Express) => {
 	app.post('/deploy/:network', async (req, res) => {
-		res.status(400).json({ error: 'This route is temporarily blocked' })
-		return
+		// res.status(400).json({ error: 'This route is temporarily blocked' })
+		// return
 
 		const { network } = req.params
 
-		if (network !== 'sepolia') {
+		if (network !== 'arbitrum-sepolia') {
 			res.status(400).json({ error: 'Invalid network' })
 			return
 		}
 
-		const provider = new ethers.JsonRpcProvider('https://rpc.ankr.com/eth_sepolia')
+		const provider = new ethers.JsonRpcProvider(RPC_URL)
 		const signer = new Wallet(PRIVATE_KEY, provider)
 
 		const prizeMap = [1, 2, 1, 2, 3, 4, 3, 5, 4]
