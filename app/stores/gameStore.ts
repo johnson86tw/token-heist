@@ -25,6 +25,8 @@ export const useGameStore = defineStore('GameStore', {
 		ambushes: Ambushes
 		prizeMap: PrizeMap
 		noticed: boolean
+		player1Role: Role
+		player2Role: Role
 	} => ({
 		fetched: false, // contract data first fetched
 		userAddress: '',
@@ -44,6 +46,8 @@ export const useGameStore = defineStore('GameStore', {
 		// temporary not fetch from contract
 		prizeMap: [1, 2, 1, 2, 3, 4, 3, 5, 4],
 		noticed: false,
+		player1Role: Role.None,
+		player2Role: Role.None,
 	}),
 	getters: {
 		userPlayerN(): Player {
@@ -104,6 +108,8 @@ export const useGameStore = defineStore('GameStore', {
 			this.gameState = Number(await tokenHeist.gameState())
 
 			// 先檢查是否已經有 player1, player2，避免每次取資料角色都會變動
+			// fix: 不行，會取用到其他場遊戲的 player1, player2
+			// 離開 /game/:address 時要清掉 gameStore 的資料
 			if (this.player1 === '' || this.player2 === '') {
 				const p1Addr = await tokenHeist.player1() // may return 0x0000... if not set
 				const p2Addr = await tokenHeist.player2()
@@ -121,6 +127,15 @@ export const useGameStore = defineStore('GameStore', {
 
 			this.currentRole = Number(await tokenHeist.currentRole())
 			this.currentPlayer = await tokenHeist.currentPlayer()
+
+			if (this.currentPlayer === this.player1) {
+				this.player1Role = this.currentRole
+				this.player2Role = this.currentRole === Role.Police ? Role.Thief : Role.Police
+			} else if (this.currentPlayer === this.player2) {
+				this.player2Role = this.currentRole
+				this.player1Role = this.currentRole === Role.Police ? Role.Thief : Role.Police
+			}
+
 			this.fetched = true
 
 			// TODO: 取得最新的 event log，如果是 sneak，檢查有無 noticed，否則 noticed 皆為 false
@@ -170,12 +185,13 @@ export const useGameStore = defineStore('GameStore', {
 				body: calldata,
 			})
 		},
-		async reveal(paths: Paths) {
-			console.log('gameStore.reveal', paths)
+		async reveal(paths: Paths, defeated: boolean = false) {
 			const input: CircuitInput = {
 				paths,
-				ambushes: this.ambushes,
+				// thief admits defeat by sending a valid proof with valid commitment but invalid ambushes
+				ambushes: defeated ? Array(5).fill([-1, -1]) : this.ambushes,
 			}
+			console.log('gameStore.reveal', input.paths, input.ambushes, defeated)
 			const { a, b, c, Input } = await exportCallDataBigInt(input)
 			const flattenedPaths = flatten(paths).map(x => BigInt(x)) as [bigint, bigint, bigint, bigint, bigint]
 			const calldata = await genCalldata({

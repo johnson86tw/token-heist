@@ -26,10 +26,10 @@ importers:
                 specifier: ^0.5.1
                 version: 0.5.1(vue@3.4.20)
             '@token-heist/backend':
-                specifier: ^0.0.3
+                specifier: ^0.0.4
                 version: link:../backend
             '@token-heist/contracts':
-                specifier: ^0.0.3
+                specifier: ^0.0.4
                 version: link:../contracts
             '@vueuse/core':
                 specifier: ^10.9.0
@@ -108,7 +108,7 @@ importers:
     backend:
         dependencies:
             '@token-heist/contracts':
-                specifier: ^0.0.3
+                specifier: ^0.0.4
                 version: link:../contracts
             cors:
                 specifier: ^2.8.5
@@ -188,7 +188,7 @@ importers:
                 specifier: ^5.0.2
                 version: 5.0.2
             '@token-heist/circuits':
-                specifier: ^0.0.3
+                specifier: ^0.0.4
                 version: link:../circuits
             circomlibjs:
                 specifier: ^0.1.7

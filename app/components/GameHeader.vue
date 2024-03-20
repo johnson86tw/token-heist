@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Channel, type SSRoomCount, type ServerSendMsg } from '@token-heist/backend/src/types/socketTypes'
 import { ws, sendRoomCount } from '~/core/websocket'
-import { Player } from '~/types'
+import { GameState, Player, Role } from '~/types'
 
 const gameStore = useGameStore()
 
@@ -47,12 +47,16 @@ const player2CountdownActive = computed(() => {
 	return gameStore.currentPlayerN === Player.Player2
 })
 
-const { userPlayerN } = storeToRefs(gameStore)
+const { userPlayerN, player1Role, player2Role, gameState } = storeToRefs(gameStore)
 </script>
 
 <template>
-	<div class="p-3 pb-0 flex justify-between">
+	<div
+		v-if="gameState === GameState.RoundOneInProgress || gameState === GameState.RoundTwoInProgress"
+		class="p-3 pb-0 flex justify-between"
+	>
 		<div>
+			<!-- player 1 -->
 			<div
 				class="flex items-center gap-2"
 				:class="{
@@ -66,7 +70,8 @@ const { userPlayerN } = storeToRefs(gameStore)
 				>
 					Player 1
 				</div>
-				<Thief width="18" height="18" />
+				<Thief v-if="player1Role === Role.Thief" width="18" height="18" />
+				<Cop v-if="player1Role === Role.Police" width="16" height="16" />
 				<div>
 					<n-countdown
 						v-if="player1CountdownActive"
@@ -84,6 +89,7 @@ const { userPlayerN } = storeToRefs(gameStore)
 					/>
 				</div>
 			</div>
+			<!-- player 2 -->
 			<div
 				class="flex items-center gap-2"
 				:class="{
@@ -97,7 +103,8 @@ const { userPlayerN } = storeToRefs(gameStore)
 				>
 					Player 2
 				</div>
-				<Cop width="16" height="16" />
+				<Thief v-if="player2Role === Role.Thief" width="18" height="18" />
+				<Cop v-if="player2Role === Role.Police" width="16" height="16" />
 				<div>
 					<n-countdown
 						v-if="player2CountdownActive"
@@ -133,9 +140,7 @@ const { userPlayerN } = storeToRefs(gameStore)
 
 		<n-drawer v-model:show="showTips" :height="200" placement="top">
 			<n-drawer-content title="Tips">
-				<ul class="list-disc px-5">
-					<li>Each game consists of two rounds, with players taking turns being the thief and the police.</li>
-				</ul>
+				<Tips />
 			</n-drawer-content>
 		</n-drawer>
 	</div>

@@ -17,7 +17,7 @@ const props = withDefaults(
 		isTimeup: boolean
 		sneak: (paths: Paths) => Promise<void>
 		dispatch: (x: number, y: number) => Promise<void>
-		reveal: (paths: Paths) => Promise<void>
+		reveal: (paths: Paths, defeated?: boolean) => Promise<void>
 	}>(),
 	{},
 )
@@ -81,26 +81,27 @@ const bottomCopCount = computed(() => {
 watch(
 	() => props.ambushes,
 	async () => {
+		// why this watch will be kept triggering?
+		// console.log('watch ambushes')
 		if (isThiefMyTurn.value) {
-			if (
-				policeLastMove.value[0] === thiefLastMove.value[0] &&
-				policeLastMove.value[1] === thiefLastMove.value[1]
-			) {
-				// 1. thief is caught
-				try {
+			try {
+				if (
+					thiefLastMove.value[0] !== -1 &&
+					thiefLastMove.value[1] !== -1 &&
+					policeLastMove.value[0] === thiefLastMove.value[0] &&
+					policeLastMove.value[1] === thiefLastMove.value[1]
+				) {
+					// 1. thief is caught
+
+					await props.reveal(paths.value, true)
+				} else if (props.ambushes[4][0] !== -1 && props.ambushes[4][1] !== -1) {
+					// 2. ambushes are used up and thief is not caught
 					await props.reveal(paths.value)
-				} catch (err: any) {
-					console.error(err)
-					message.error(err.message)
 				}
-			} else if (props.ambushes[4][0] !== -1 && props.ambushes[4][1] !== -1) {
-				// 2. ambushes are used up
-				try {
-					await props.reveal(paths.value)
-				} catch (err: any) {
-					console.error(err)
-					message.error(err.message)
-				}
+				emit('reload')
+			} catch (err: any) {
+				console.error(err)
+				message.error(err.message)
 			}
 		}
 	},

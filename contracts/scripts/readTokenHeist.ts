@@ -5,7 +5,7 @@ import { TokenHeist__factory } from '../typechain-types'
 	pnpm hardhat run scripts/readTokenHeist.ts --network arbitrum-sepolia
 */
 
-const tokenHeistAddress = '0xA33C6B2a730a1a70539AFC58aE6d7A6e154dC161'
+const tokenHeistAddress = '0x150E8FcBBC06DC002c8B572e7bfFc54b18E02CAf'
 
 async function main() {
 	const tokenHeist = TokenHeist__factory.connect(tokenHeistAddress, (await ethers.getSigners())[0])
@@ -30,6 +30,9 @@ async function main() {
 			[] as [number, number][],
 		),
 	)
+	const player1Score = await tokenHeist.scores(0)
+	const player2Score = await tokenHeist.scores(1)
+	console.log('scores', player1Score, player2Score)
 }
 
 main().catch(error => {
