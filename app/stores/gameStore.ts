@@ -108,6 +108,8 @@ export const useGameStore = defineStore('GameStore', {
 			this.gameState = Number(await tokenHeist.gameState())
 
 			// 先檢查是否已經有 player1, player2，避免每次取資料角色都會變動
+			// fix: 不行，會取用到其他場遊戲的 player1, player2
+			// 離開 /game/:address 時要清掉 gameStore 的資料
 			if (this.player1 === '' || this.player2 === '') {
 				const p1Addr = await tokenHeist.player1() // may return 0x0000... if not set
 				const p2Addr = await tokenHeist.player2()
