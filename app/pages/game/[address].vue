@@ -13,6 +13,11 @@ const address = route.params.address as string
 if (!address) {
 	navigateTo('/')
 }
+// if address do not in the localStorage, add it
+const { addresses, addAddress } = useLsAddresses()
+if (!addresses.value.includes(address)) {
+	addAddress(address)
+}
 
 const gameStore = useGameStore()
 

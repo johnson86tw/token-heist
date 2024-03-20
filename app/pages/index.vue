@@ -37,6 +37,7 @@ if (process.client) {
 	})
 }
 
+// ----------------------- feat: address list -----------------------
 const { addresses, addAddress, removeAddress } = useLsAddresses()
 const loading = ref(false)
 async function onClickCreateGame() {
