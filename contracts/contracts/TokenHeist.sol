@@ -143,6 +143,7 @@ contract TokenHeist is ERC2771Context {
 
     function heist(uint256 score) private {
         if (gameState == GameState.RoundOneInProgress) {
+            // round 1 ends
             scores[0] = score;
             gameState = GameState.RoundTwoInProgress;
 
@@ -157,7 +158,8 @@ contract TokenHeist is ERC2771Context {
                 ambushes[i] = [-1, -1];
             }
         } else if (gameState == GameState.RoundTwoInProgress) {
-            scores[0] = score;
+            // round 2 ends
+            scores[1] = score;
             gameState = GameState.Ended;
 
             address winner;
