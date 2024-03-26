@@ -185,20 +185,20 @@ export const useGameStore = defineStore('GameStore', {
 				body: calldata,
 			})
 		},
-		async reveal(paths: Paths, defeated: boolean = false) {
+		async reveal(paths: Paths, caught: boolean = false) {
 			const input: CircuitInput = {
 				paths,
 				// thief admits defeat by sending a valid proof with valid commitment but invalid ambushes
-				ambushes: defeated ? Array(5).fill([-1, -1]) : this.ambushes,
+				ambushes: caught ? Array(5).fill([-1, -1]) : this.ambushes,
 			}
-			console.log('gameStore.reveal', input.paths, input.ambushes, defeated)
+			console.log('gameStore.reveal', input.paths, input.ambushes, caught)
 			const { a, b, c, Input } = await exportCallDataBigInt(input)
 			const flattenedPaths = flatten(paths).map(x => BigInt(x)) as [bigint, bigint, bigint, bigint, bigint]
 			const calldata = await genCalldata({
 				tokenHeistAddress: this.tokenHeistAddress,
 				provider: provider,
 				signer: signer,
-				data: tokenHeist.interface.encodeFunctionData('reveal', [flattenedPaths, a, b, c, Input]),
+				data: tokenHeist.interface.encodeFunctionData('reveal', [flattenedPaths, a, b, c, Input, caught]),
 			})
 			const { httpPost } = useHttp()
 			await httpPost('/relay', {

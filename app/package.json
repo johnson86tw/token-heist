@@ -11,7 +11,8 @@
 		"dev": "nuxt dev",
 		"generate": "nuxt generate",
 		"preview": "nuxt preview",
-		"postinstall": "nuxt prepare"
+		"postinstall": "nuxt prepare",
+		"typecheck": "nuxi typecheck"
 	},
 	"dependencies": {
 		"@pinia/nuxt": "^0.5.1",
@@ -42,7 +43,8 @@
 		"jsdom": "^24.0.0",
 		"sass": "^1.71.1",
 		"unplugin-vue-components": "^0.26.0",
-		"vitest": "^1.3.1"
+		"vitest": "^1.3.1",
+		"vue-tsc": "^2.0.7"
 	},
 	"gitHead": "bd52591fee801da77ed3a805528a92ac48468598"
 }

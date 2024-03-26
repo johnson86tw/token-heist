@@ -200,10 +200,11 @@ describe('TokenHeist Simple Game Flow', function () {
 				dataResult.b,
 				dataResult.c,
 				dataResult.Input,
+				false,
 			),
 		)
 			.to.emit(tokenHeistPlayer1, 'Reveal')
-			.withArgs(1, player1.address, exportFlatten(input.paths))
+			.withArgs(false, player1.address, exportFlatten(input.paths))
 
 		expect(await tokenHeistPlayer1.scores(0)).to.equal(8)
 
@@ -223,5 +224,180 @@ describe('TokenHeist Simple Game Flow', function () {
 				[-1, -1],
 			]),
 		)
+	})
+
+	/**
+		Round 2: police (player1) wins
+
+			thief:                  police:                 notice:
+		1.	[5, -1, -1, -1, -1]     [1, -1, -1, -1, -1]     false
+		2.	[5, 5, -1, -1, -1]		[1, 7, -1, -1, -1]		false
+		3.  [5, 5, 5, -1, -1]		[1, 7, 0, -1, -1] 		false
+		4.  [5, 5, 5, 5, -1]        [1, 7, 0, 3, -1] 		false
+		5.  [5, 5, 5, 5, 5]         [1, 7, 0, 3, 6] 		false
+			reveal()
+
+		scores: [8, 4]
+
+									[1, 0],
+									[1, 2],
+									[0, 0],
+									[0, 1],
+									[0, 2],
+	*/
+	it('should process the second round', async function () {
+		// 1.
+		let input: CircuitInput = {
+			paths: [
+				[2, 1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+			ambushes: [
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+		}
+		let dataResult = await exportCallDataGroth16(input)
+		await expect(tokenHeistPlayer2.sneak(dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
+			.to.emit(tokenHeistPlayer2, 'Sneak')
+			.withArgs(2, player2.address, false)
+		await tokenHeistPlayer1.dispatch(1, 0)
+
+		// 2.
+		input = {
+			paths: [
+				[2, 1],
+				[2, 1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+			ambushes: [
+				[1, 0],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+		}
+		dataResult = await exportCallDataGroth16(input)
+		await expect(tokenHeistPlayer2.sneak(dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
+			.to.emit(tokenHeistPlayer2, 'Sneak')
+			.withArgs(2, player2.address, false)
+		await tokenHeistPlayer1.dispatch(1, 2)
+
+		// 3.
+		input = {
+			paths: [
+				[2, 1],
+				[2, 1],
+				[2, 1],
+				[-1, -1],
+				[-1, -1],
+			],
+			ambushes: [
+				[1, 0],
+				[1, 2],
+				[-1, -1],
+				[-1, -1],
+				[-1, -1],
+			],
+		}
+		dataResult = await exportCallDataGroth16(input)
+		await expect(tokenHeistPlayer2.sneak(dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
+			.to.emit(tokenHeistPlayer2, 'Sneak')
+			.withArgs(2, player2.address, false)
+		await tokenHeistPlayer1.dispatch(0, 0)
+
+		// 4.
+		input = {
+			paths: [
+				[2, 1],
+				[2, 1],
+				[2, 1],
+				[2, 1],
+				[-1, -1],
+			],
+			ambushes: [
+				[1, 0],
+				[1, 2],
+				[0, 0],
+				[-1, -1],
+				[-1, -1],
+			],
+		}
+		dataResult = await exportCallDataGroth16(input)
+		await expect(tokenHeistPlayer2.sneak(dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
+			.to.emit(tokenHeistPlayer2, 'Sneak')
+			.withArgs(2, player2.address, false)
+		await tokenHeistPlayer1.dispatch(0, 1)
+
+		// 5
+		input = {
+			paths: [
+				[2, 1],
+				[2, 1],
+				[2, 1],
+				[2, 1],
+				[2, 1],
+			],
+			ambushes: [
+				[1, 0],
+				[1, 2],
+				[0, 0],
+				[0, 1],
+				[-1, -1],
+			],
+		}
+		dataResult = await exportCallDataGroth16(input)
+		await expect(tokenHeistPlayer2.sneak(dataResult.a, dataResult.b, dataResult.c, dataResult.Input))
+			.to.emit(tokenHeistPlayer2, 'Sneak')
+			.withArgs(2, player2.address, false)
+		await tokenHeistPlayer1.dispatch(0, 2)
+	})
+
+	it('should reveal by player 2 and end the game', async function () {
+		const input: CircuitInput = {
+			paths: [
+				[2, 1],
+				[2, 1],
+				[2, 1],
+				[2, 1],
+				[2, 1],
+			],
+			ambushes: [
+				[1, 0],
+				[1, 2],
+				[0, 0],
+				[0, 1],
+				[0, 2],
+			],
+		}
+		const dataResult = await exportCallDataGroth16(input)
+		await expect(
+			tokenHeistPlayer2.reveal(
+				exportFlatten(input.paths),
+				dataResult.a,
+				dataResult.b,
+				dataResult.c,
+				dataResult.Input,
+				false,
+			),
+		)
+			.to.emit(tokenHeistPlayer2, 'Reveal')
+			.withArgs(false, player2.address, exportFlatten(input.paths))
+
+		expect(await tokenHeistPlayer1.gameState()).to.equal(3)
+	})
+
+	it('should correctly record scores', async () => {
+		expect(await tokenHeistPlayer2.scores(0)).to.equal(8)
+		expect(await tokenHeistPlayer2.scores(1)).to.equal(4)
 	})
 })

@@ -79,7 +79,7 @@ contract TokenHeist is ERC2771Context {
     event GameStarted(address indexed player1, address indexed player2);
     event GameEnded(address indexed winner, uint256[2] scores);
     event Sneak(GameState gameState, address indexed player, bool noticed);
-    event Reveal(GameState gameState, address indexed player, int8[5] flattenedSneakPaths);
+    event Reveal(bool caught, address indexed player, int8[5] flattenedSneakPaths);
     event Dispatch(GameState gameState, address indexed player);
     event TimeUp(GameState gameState, Role role, address indexed player);
 
@@ -143,6 +143,7 @@ contract TokenHeist is ERC2771Context {
 
     function heist(uint256 score) private {
         if (gameState == GameState.RoundOneInProgress) {
+            // round 1 ends
             scores[0] = score;
             gameState = GameState.RoundTwoInProgress;
 
@@ -157,7 +158,8 @@ contract TokenHeist is ERC2771Context {
                 ambushes[i] = [-1, -1];
             }
         } else if (gameState == GameState.RoundTwoInProgress) {
-            scores[0] = score;
+            // round 2 ends
+            scores[1] = score;
             gameState = GameState.Ended;
 
             address winner;
@@ -227,7 +229,8 @@ contract TokenHeist is ERC2771Context {
         uint256[2] calldata _pA,
         uint256[2][2] calldata _pB,
         uint256[2] calldata _pC,
-        uint256[13] calldata _pubSignals
+        uint256[13] calldata _pubSignals,
+        bool caught
     ) external onlyThief gameInProgress {
         uint256 hash = hashCommitment(_flattenedSneakPaths);
 
@@ -235,34 +238,38 @@ contract TokenHeist is ERC2771Context {
             revert InvalidCommitment();
         }
 
-        if (sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
-            // thief admits defeat by sending a valid proof with valid commitment but invalid ambushes
-            if (isValidAmbushes(_pubSignals)) {
-                // theif wins
-                if (copUsedCount == MAX_COPS) {
-                    // calculate player1's score
-                    // feat: the path that has been walked cannot be calculated repeatedly
-                    bool[9] memory visited = [false, false, false, false, false, false, false, false, false];
-                    uint256 score = 0;
-                    for (uint8 i = 0; i < _flattenedSneakPaths.length; i++) {
-                        // _sneakPaths value must be unsigned
-                        if (_flattenedSneakPaths[i] < 0) {
-                            revert InvalidSneakPath();
-                        }
-                        if (!visited[uint8(_flattenedSneakPaths[i])]) {
-                            score += prizeMap[uint8(_flattenedSneakPaths[i])];
-                        }
-                        visited[uint8(_flattenedSneakPaths[i])] = true;
-                    }
-                    emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
-                    heist(score);
-                } else {
-                    revert ShouldSneak();
-                }
-            } else {
-                emit Reveal(gameState, roles[Role.Thief], _flattenedSneakPaths);
-                heist(0);
+        if (!caught && sneakVerifier.verifyProof(_pA, _pB, _pC, _pubSignals)) {
+            if (!isValidAmbushes(_pubSignals)) {
+                revert InvalidAmbushes();
             }
+
+            // thief wins
+            if (copUsedCount == MAX_COPS) {
+                // calculate player1's score
+                // feat: the path that has been walked cannot be calculated repeatedly
+                bool[9] memory visited = [false, false, false, false, false, false, false, false, false];
+                uint256 score = 0;
+                for (uint8 i = 0; i < _flattenedSneakPaths.length; i++) {
+                    // _sneakPaths value must be unsigned
+                    if (_flattenedSneakPaths[i] < 0) {
+                        revert InvalidSneakPath();
+                    }
+                    if (!visited[uint8(_flattenedSneakPaths[i])]) {
+                        score += prizeMap[uint8(_flattenedSneakPaths[i])];
+                    }
+                    visited[uint8(_flattenedSneakPaths[i])] = true;
+                }
+                emit Reveal(caught, roles[Role.Thief], _flattenedSneakPaths);
+                heist(score);
+            } else {
+                revert ShouldSneak();
+            }
+        } else if (caught) {
+            // thief has been caught
+            emit Reveal(caught, roles[Role.Thief], _flattenedSneakPaths);
+            heist(0);
+        } else {
+            revert InvalidReveal();
         }
     }
 
@@ -313,6 +320,7 @@ contract TokenHeist is ERC2771Context {
     error InvalidCoordinates();
     error CopExhausted();
     error AmbushExists();
+    error InvalidReveal();
 
     // ================================ View functions ================================
 

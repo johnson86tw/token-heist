@@ -20,8 +20,6 @@ onMounted(async () => {
 		loadingBar.start()
 		player1Score.value = Number(await tokenHeist.scores(0))
 		player2Score.value = Number(await tokenHeist.scores(1))
-		console.log('player1Score', player1Score.value)
-		console.log('player2Score', player2Score.value)
 	} catch (err: any) {
 		console.error(err)
 		message.error(err.message)
@@ -37,6 +35,22 @@ const winner = computed<Player>(() => {
 		return Player.Player2
 	} else {
 		return Player.None
+	}
+})
+
+const gameStore = useGameStore()
+
+const whoWon = computed(() => {
+	if (winner.value === Player.Player1 && gameStore.userPlayerN === Player.Player1) {
+		return 'You won!'
+	} else if (winner.value === Player.Player2 && gameStore.userPlayerN === Player.Player2) {
+		return 'You won!'
+	} else if (winner.value === Player.Player1 && gameStore.userPlayerN === Player.Player2) {
+		return 'You lost!'
+	} else if (winner.value === Player.Player2 && gameStore.userPlayerN === Player.Player1) {
+		return 'You lost!'
+	} else {
+		return ''
 	}
 })
 </script>
@@ -56,7 +70,8 @@ const winner = computed<Player>(() => {
 		<div class="flex flex-col justify-center gap-2">
 			<div class="flex flex-col items-center">
 				<p class="title">Game Over</p>
-				<p v-if="winner" class="subtitle">Player {{ winner }} wins!</p>
+				<p v-if="gameStore.userPlayerN !== Player.None" class="subtitle">{{ whoWon }}</p>
+				<p v-else class="subtitle">Player {{ winner }} wins!</p>
 
 				<div class="mt-5 flex flex-col item-center">
 					<p class="text-center">Scores</p>
