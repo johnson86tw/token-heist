@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
-import { Player } from '~/types'
+import { Player, type Paths } from '~/types'
 
 const GameProps = {
+	tokenHeistAddress: '0x1234567890123456789012345678901234567890',
 	gameState: 1,
 	userRole: 0,
 	currentRole: 1,
@@ -24,11 +25,16 @@ const GameProps = {
 	countdown: dayjs().add(30, 'minute'),
 	noticed: false,
 	isTimeup: false,
+	sneak: async (paths: Paths) => console.log('Sneak'),
+	dispatch: async (x: number, y: number) => console.log('Dispatch'),
+	reveal: async (paths: Paths, caught?: boolean) => console.log('Reveal'),
 }
 </script>
 
 <template>
-	<GameInProgress v-bind="GameProps" />
+	<ClientOnly>
+		<GameInProgress v-bind="GameProps" @reload="() => console.log('Reload')" />
+	</ClientOnly>
 </template>
 
 <style lang="scss"></style>
