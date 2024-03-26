@@ -200,10 +200,11 @@ describe('TokenHeist Simple Game Flow', function () {
 				dataResult.b,
 				dataResult.c,
 				dataResult.Input,
+				false,
 			),
 		)
 			.to.emit(tokenHeistPlayer1, 'Reveal')
-			.withArgs(1, player1.address, exportFlatten(input.paths))
+			.withArgs(false, player1.address, exportFlatten(input.paths))
 
 		expect(await tokenHeistPlayer1.scores(0)).to.equal(8)
 

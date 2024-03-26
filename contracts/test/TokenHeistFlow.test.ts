@@ -233,10 +233,11 @@ describe('TokenHeist Simple Game Flow', function () {
 				dataResult.b,
 				dataResult.c,
 				dataResult.Input,
+				false,
 			),
 		)
 			.to.emit(tokenHeistPlayer1, 'Reveal')
-			.withArgs(1, player1.address, exportFlatten(input.paths))
+			.withArgs(false, player1.address, exportFlatten(input.paths))
 
 		expect(await tokenHeistPlayer1.scores(0)).to.equal(8)
 
@@ -362,7 +363,6 @@ describe('TokenHeist Simple Game Flow', function () {
 				[-1, -1],
 				[-1, -1],
 			],
-			// thief admits defeat by sending a valid proof with valid commitment but invalid ambushes
 			ambushes: [
 				[1, 0],
 				[1, 2],
@@ -379,10 +379,11 @@ describe('TokenHeist Simple Game Flow', function () {
 				dataResult.b,
 				dataResult.c,
 				dataResult.Input,
+				true,
 			),
 		)
 			.to.emit(tokenHeistPlayer2, 'Reveal')
-			.withArgs(2, player2.address, exportFlatten(input.paths))
+			.withArgs(true, player2.address, exportFlatten(input.paths))
 
 		expect(await tokenHeistPlayer2.scores(1)).to.equal(0)
 		expect(await tokenHeistPlayer1.gameState()).to.equal(3)
