@@ -17,7 +17,7 @@ const props = withDefaults(
 		isTimeup: boolean
 		sneak: (paths: Paths) => Promise<void>
 		dispatch: (x: number, y: number) => Promise<void>
-		reveal: (paths: Paths, defeated?: boolean) => Promise<void>
+		reveal: (paths: Paths, caught?: boolean) => Promise<void>
 	}>(),
 	{},
 )

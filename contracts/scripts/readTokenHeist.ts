@@ -5,7 +5,8 @@ import { TokenHeist__factory } from '../typechain-types'
 	pnpm hardhat run scripts/readTokenHeist.ts --network arbitrum-sepolia
 */
 
-const tokenHeistAddress = '0x150E8FcBBC06DC002c8B572e7bfFc54b18E02CAf'
+const tokenHeistAddress = process.env.READ_TOKEN_HEIST as string
+if (!tokenHeistAddress) throw new Error('READ_TOKEN_HEIST is not set')
 
 async function main() {
 	const tokenHeist = TokenHeist__factory.connect(tokenHeistAddress, (await ethers.getSigners())[0])
