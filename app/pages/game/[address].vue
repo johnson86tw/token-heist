@@ -85,7 +85,7 @@ onUnmounted(() => {
 	tokenHeist.removeAllListeners()
 })
 
-const { fetched, gameState, userRole, currentRole, ambushes, prizeMap } = storeToRefs(gameStore)
+const { fetched, gameState, userRole, currentRole, ambushes, prizeMap, noticed } = storeToRefs(gameStore)
 
 // Ensure that the ref is passed to the object wrapped by reactive to make the props reactive
 const GameProps = reactive({
@@ -96,7 +96,7 @@ const GameProps = reactive({
 	ambushes,
 	prizeMap,
 	countdown: dayjs().add(30, 'minute'), // skip temporarily
-	noticed: false, // get from sneak event
+	noticed,
 	isTimeup: false, // skip temporarily
 	sneak: gameStore.sneak,
 	dispatch: gameStore.dispatch,

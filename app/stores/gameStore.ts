@@ -1,4 +1,5 @@
 import { TokenHeist__factory, type TokenHeist } from '@token-heist/contracts/typechain-types'
+import type { EventLog } from 'ethers'
 import { Wallet, ZeroAddress, isAddress } from 'ethers'
 import type { Provider } from 'ethers'
 import { HDNodeWallet, ethers } from 'ethers'
@@ -138,8 +139,24 @@ export const useGameStore = defineStore('GameStore', {
 
 			this.fetched = true
 
-			// TODO: 取得最新的 event log，如果是 sneak，檢查有無 noticed，否則 noticed 皆為 false
-			this.setNoticed(false)
+			// 取得最新的 event log，如果是 sneak，檢查有無 noticed，否則 noticed 皆為 false
+			// 記得要判斷是否為上一次的 sneak event
+			// filter Dispatch event, 有效的 Sneak 的 blockNumber 應該要大於 Dispatch 的 blockNumber
+			const sneakEvents = await tokenHeist.queryFilter(tokenHeist.filters.Sneak, -7000)
+			const dispatchEvents = await tokenHeist.queryFilter(tokenHeist.filters.Dispatch, -7000)
+
+			if (sneakEvents.length > 0 && dispatchEvents.length > 0) {
+				const lastDispatchEvent = dispatchEvents[dispatchEvents.length - 1]
+				const lastSneakEvent = sneakEvents[sneakEvents.length - 1]
+				if (lastSneakEvent.blockNumber > lastDispatchEvent.blockNumber) {
+					const noticed = lastSneakEvent.args[2]
+					this.setNoticed(noticed ?? false)
+				} else {
+					this.setNoticed(false)
+				}
+			} else {
+				this.setNoticed(false)
+			}
 		},
 		async register(n: Player.Player1 | Player.Player2) {
 			const calldata = await genCalldata({

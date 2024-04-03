@@ -149,6 +149,7 @@ function to3x3Array(arr: number[]) {
 }
 
 function isRedCells(x: number, y: number) {
+	if (isThief.value) return false
 	if (!props.noticed) return false
 
 	let lastAmbush
