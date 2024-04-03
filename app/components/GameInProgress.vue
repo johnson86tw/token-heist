@@ -82,8 +82,7 @@ watch(
 	() => props.ambushes,
 	async () => {
 		console.log('watch ambushes', props.ambushes)
-		// why this watch will be kept triggering?
-		// console.log('watch ambushes')
+
 		if (isThiefMyTurn.value) {
 			try {
 				if (
@@ -93,12 +92,19 @@ watch(
 					policeLastMove.value[1] === thiefLastMove.value[1]
 				) {
 					// 1. thief is caught
-
+					message.info('Thief is caught!', {
+						duration: 5000,
+					})
 					await props.reveal(paths.value, true)
+
 					emit('reload')
 				} else if (props.ambushes[4][0] !== -1 && props.ambushes[4][1] !== -1) {
 					// 2. ambushes are used up and thief is not caught
+					message.info('Thief escaped!', {
+						duration: 5000,
+					})
 					await props.reveal(paths.value)
+
 					emit('reload')
 				}
 			} catch (err: any) {

@@ -1,5 +1,4 @@
 import { TokenHeist__factory, type TokenHeist } from '@token-heist/contracts/typechain-types'
-import type { EventLog } from 'ethers'
 import { Wallet, ZeroAddress, isAddress } from 'ethers'
 import type { Provider } from 'ethers'
 import { HDNodeWallet, ethers } from 'ethers'
@@ -119,14 +118,6 @@ export const useGameStore = defineStore('GameStore', {
 				this.player2 = p2Addr === ZeroAddress ? '' : p2Addr
 			}
 
-			const flattenedAmbushes = (await tokenHeist.flattenedAmbushes()).map(x => Number(x))
-
-			this.ambushes[0] = [flattenedAmbushes[0], flattenedAmbushes[1]]
-			this.ambushes[1] = [flattenedAmbushes[2], flattenedAmbushes[3]]
-			this.ambushes[2] = [flattenedAmbushes[4], flattenedAmbushes[5]]
-			this.ambushes[3] = [flattenedAmbushes[6], flattenedAmbushes[7]]
-			this.ambushes[4] = [flattenedAmbushes[8], flattenedAmbushes[9]]
-
 			this.currentRole = Number(await tokenHeist.currentRole())
 			this.currentPlayer = await tokenHeist.currentPlayer()
 
@@ -158,6 +149,16 @@ export const useGameStore = defineStore('GameStore', {
 			} else {
 				this.setNoticed(false)
 			}
+
+			// 因為這個會觸發 watch ambushes 然後可能會 reveal，因此等到 state 更新後再 modify ambushes 以免 watch ambushes 時資料還是舊的
+
+			const flattenedAmbushes = (await tokenHeist.flattenedAmbushes()).map(x => Number(x))
+
+			this.ambushes[0] = [flattenedAmbushes[0], flattenedAmbushes[1]]
+			this.ambushes[1] = [flattenedAmbushes[2], flattenedAmbushes[3]]
+			this.ambushes[2] = [flattenedAmbushes[4], flattenedAmbushes[5]]
+			this.ambushes[3] = [flattenedAmbushes[6], flattenedAmbushes[7]]
+			this.ambushes[4] = [flattenedAmbushes[8], flattenedAmbushes[9]]
 		},
 		async register(n: Player.Player1 | Player.Player2) {
 			const calldata = await genCalldata({
