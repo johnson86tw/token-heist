@@ -106,6 +106,7 @@ export const useGameStore = defineStore('GameStore', {
 			console.log(`%cuser ${signer.address}`, 'color: #90EE90;')
 		},
 		async fetchContractData() {
+			console.log('gameStore.fetchContractData')
 			this.gameState = Number(await tokenHeist.gameState())
 
 			// 先檢查是否已經有 player1, player2，避免每次取資料角色都會變動

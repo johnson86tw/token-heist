@@ -81,6 +81,7 @@ const bottomCopCount = computed(() => {
 watch(
 	() => props.ambushes,
 	async () => {
+		console.log('watch ambushes', props.ambushes)
 		// why this watch will be kept triggering?
 		// console.log('watch ambushes')
 		if (isThiefMyTurn.value) {
@@ -94,11 +95,12 @@ watch(
 					// 1. thief is caught
 
 					await props.reveal(paths.value, true)
+					emit('reload')
 				} else if (props.ambushes[4][0] !== -1 && props.ambushes[4][1] !== -1) {
 					// 2. ambushes are used up and thief is not caught
 					await props.reveal(paths.value)
+					emit('reload')
 				}
-				emit('reload')
 			} catch (err: any) {
 				console.error(err)
 				message.error(err.message)
