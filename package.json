@@ -2,8 +2,8 @@
 	"name": "token-heist",
 	"version": "0.0.0",
 	"description": "",
-	"repository": "https://github.com/chnejohnson/token-heist",
-	"author": "Johnson Chen <https://twitter.com/chnejohnson>",
+	"repository": "https://github.com/johnson86tw/token-heist",
+	"author": "Johnson Chen <https://twitter.com/johnson86tw>",
 	"license": "MIT",
 	"scripts": {
 		"build": "pnpm -F contracts build",
