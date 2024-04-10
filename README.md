@@ -1,5 +1,16 @@
 # Token Heist
 
+
+## Demo
+
+<div style="display: flex;">
+  <img src="https://github.com/johnson86tw/token-heist/blob/main/docs/demo-thief.png" alt="demo-thief" width="200">
+  <img src="https://github.com/johnson86tw/token-heist/blob/main/docs/demo-police.png" alt="demo-police" width="200">
+</div>
+
+<video src="https://github.com/johnson86tw/token-heist/assets/31992185/87e481a0-98e1-4517-8be4-5d794e66ea91"></video>
+
+
 ## Game Rules
 
 - Two players compete on a 3x3 board, one as the police and the other as the thief. They take turns to move, with the thief starting first.
@@ -12,11 +23,11 @@
 
 ## Circuit Scheme
 
-<img src="https://github.com/chnejohnson/token-heist/blob/main/docs/scheme.png" alt="Circuit Scheme" style="max-width:100%;" width="800">
+<img src="https://github.com/johnson86tw/token-heist/blob/main/docs/scheme.png" alt="Circuit Scheme" style="max-width:100%;" width="800">
 
 ## Flow and Process
-<img src="https://github.com/chnejohnson/token-heist/blob/main/docs/flow.png" alt="Flow" style="max-width:100%;" width="700">
-<img src="https://github.com/chnejohnson/token-heist/blob/main/docs/process.png" alt="Process" style="max-width:100%;" width="600">
+<img src="https://github.com/johnson86tw/token-heist/blob/main/docs/flow.png" alt="Flow" style="max-width:100%;" width="700">
+<img src="https://github.com/johnson86tw/token-heist/blob/main/docs/process.png" alt="Process" style="max-width:100%;" width="600">
 
 
 ## Image Attribution
