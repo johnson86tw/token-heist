@@ -30,5 +30,6 @@
 <img src="https://github.com/johnson86tw/token-heist/blob/main/docs/process.png" alt="Process" style="max-width:100%;" width="600">
 
 
-## Image Attribution
-- "Money Heist Mask PNG Free Image" by [Rojal](https://www.pngall.com/money-heist-tv-series-png/), licensed under CC BY-NC 4.0. Image source: [Link](https://www.pngall.com/money-heist-tv-series-png/download/54638)
+## Credits
+- This game is taken from the Game Theory course on Coursera https://www.coursera.org/learn/game-theory-1
+- Image Attribution: "Money Heist Mask PNG Free Image" by [Rojal](https://www.pngall.com/money-heist-tv-series-png/), licensed under CC BY-NC 4.0. Image source: [Link](https://www.pngall.com/money-heist-tv-series-png/download/54638)
