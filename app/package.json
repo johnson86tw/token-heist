@@ -4,7 +4,7 @@
 	"description": "",
 	"repository": "https://github.com/johnson86tw/token-heist",
 	"author": "Johnson Chen <https://twitter.com/johnson86tw>",
-	"license": "MIT",
+	"license": "GPL-3.0",
 	"type": "module",
 	"scripts": {
 		"build": "nuxt build",

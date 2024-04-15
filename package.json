@@ -1,10 +1,10 @@
 {
 	"name": "token-heist",
 	"version": "0.0.0",
-	"description": "",
+	"description": "A real-time on-chain Board Game",
 	"repository": "https://github.com/johnson86tw/token-heist",
 	"author": "Johnson Chen <https://twitter.com/johnson86tw>",
-	"license": "MIT",
+	"license": "GPL-3.0",
 	"scripts": {
 		"build": "pnpm -F contracts build",
 		"dev": "pnpm -F app dev",
