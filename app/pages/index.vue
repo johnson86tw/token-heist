@@ -75,7 +75,7 @@ const reversedAddresses = computed(() => addresses.value.slice().reverse())
 			</n-space>
 
 			<!-- header right -->
-			<div class="flex-1 flex justify-end items-center gap-3">
+			<div class="flex-1 flex justify-end items-center gap-4">
 				<Icon
 					class="hover:text-teal-300 cursor-pointer"
 					size="24"
@@ -88,7 +88,12 @@ const reversedAddresses = computed(() => addresses.value.slice().reverse())
 					<p>{{ lobbyCount }}</p>
 				</div>
 
-				<n-drawer v-model:show="showTips" :height="200" placement="top">
+				<!-- Github -->
+				<NuxtLink to="https://github.com/johnson86tw/token-heist" target="_blank">
+					<Icon class="hover:text-teal-300" name="i-mdi-github" size="24" />
+				</NuxtLink>
+
+				<n-drawer v-model:show="showTips" :height="300" placement="top">
 					<n-drawer-content title="Tips">
 						<Tips />
 					</n-drawer-content>

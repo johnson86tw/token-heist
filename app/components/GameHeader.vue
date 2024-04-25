@@ -138,7 +138,7 @@ const { userPlayerN, player1Role, player2Role, gameState } = storeToRefs(gameSto
 			</div>
 		</div>
 
-		<n-drawer v-model:show="showTips" :height="200" placement="top">
+		<n-drawer v-model:show="showTips" :height="300" placement="top">
 			<n-drawer-content title="Tips">
 				<Tips />
 			</n-drawer-content>
