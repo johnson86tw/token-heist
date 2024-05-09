@@ -65,7 +65,7 @@ const reversedAddresses = computed(() => addresses.value.slice().reverse())
 
 <template>
 	<div>
-		<AppBanner id="gitcoin-grants" to="https://explorer.gitcoin.co/#/round/42161/25/98">
+		<!-- <AppBanner id="gitcoin-grants" to="https://explorer.gitcoin.co/#/round/42161/25/98">
 			<div class="flex items-center gap-2">
 				<Icon name="i-streamline-blood-donate-drop" class="w-5 h-5 flex-shrink-0 pointer-events-none" />
 				<span>
@@ -73,7 +73,7 @@ const reversedAddresses = computed(() => addresses.value.slice().reverse())
 					live!
 				</span>
 			</div>
-		</AppBanner>
+		</AppBanner> -->
 
 		<div class="p-3 pb-0 flex justify-between">
 			<div class="flex-1"></div>
